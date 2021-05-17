@@ -84,7 +84,7 @@ if st.button(f'Calculate {target[0]}'):
     else:
         df_data = select_feature(df, features, target)
         datas = split_data(df_data, n_splits=CFG.n_splits)
-        st.text(f'[{datetime.now()}] Done: Data separation')
+        st.text(f'[{datetime.now()}] Done: Data separation.')
 
         output = select_model(model_list, datas, features, target, metric=metric)
         st.text(f'[{datetime.now()}] Done: Model selection.')
