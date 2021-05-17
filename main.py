@@ -77,7 +77,7 @@ metric = st.selectbox(
 # Select Target
 target = [st.selectbox('Target', [column for column in columns if column not in features])]
 
-if st.button(f'Calculate {target[0]}'):
+if st.button(f'Calculate ({target[0]})'):
     if np.sum(feature_index) > CFG.max_num_feature:
         st.text('Maximum number of features exceeded.')
 
