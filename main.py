@@ -34,19 +34,15 @@ ss = SessionState.get(
 def load_data(filename, n=10000):
     # Load Data
     df = pd.read_csv(filename)
-
-    # Select Column
-    columns = df.columns
-    select_columns = []
-    for column in columns:
-        if is_numeric_dtype(df[column]):
-            if len(np.unique(df[column])) < len(df[column]):
-                select_columns.append(column)
-    df = df[select_columns]
-
+   
     # Sampling
     if len(df) > n:
         df = df.sample(n=n)
+
+    # Select Column
+    columns = df.columns
+    columns = [column for column in columns if is_numeric_dtype(df[column])]
+    df = df[columns]
     return df
 
 # Load Data
@@ -56,7 +52,7 @@ columns = list(df.columns)
 
 # Select Feature
 st.text(f'Select Features (Maximum: {CFG.max_num_feature})')
-feature_index = [st.checkbox(f'{column}', value=True) for column in columns]
+feature_index = [st.checkbox(f'{column}', value=False) for column in columns]
 features = list(np.array(columns)[feature_index])
 st.text(f'Feature Number: {np.sum(feature_index)}')
 
