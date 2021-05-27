@@ -1,9 +1,9 @@
-from datetime import datetime
 import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 from glob import glob
+from datetime import datetime
 from pandas.api.types import is_numeric_dtype
 from module.data_preparation import select_feature, split_data
 from module.model_selection import select_model
@@ -21,19 +21,6 @@ class CFG:
     max_shap_data_num = 100
     num_simulation = 1000
 
-
-# Information
-st.text('Tree model Analysis Tool | v0.6')
-
-# Create Session
-ss = SessionState.get(
-    datas=None,
-    output=None,
-    is_model_selection=False,
-    shap_value=None,
-    importance=None,
-)
-
 # Define Function
 @st.cache()
 def load_data(filename, n=10000):
@@ -49,6 +36,37 @@ def load_data(filename, n=10000):
     columns = [column for column in columns if is_numeric_dtype(df[column])]
     df = df[columns]
     return df
+
+def add_histogram(ax, x, y):
+    x_min = np.min(x)
+    x_max = np.max(x)
+    x_range = x_max - x_min
+
+    y_min = np.min(y)
+    y_max = np.max(y)
+    y_range = y_max - y_min
+
+    bins = np.arange(x_min, x_max, x_range*0.01)
+    hist_y, hist_x = np.histogram(x, bins=bins)
+    hist_x = (hist_x[:-1] + hist_x[1:]) / 2
+    hist_y = np.minimum(hist_y, np.percentile(hist_y, 98))
+    hist_y = 0.1 * y_range * hist_y / np.max(hist_y)
+    width = np.mean(np.abs(hist_x[1:]-hist_x[:-1]))
+    bottom = y_min-y_range*0.1
+    ax.bar(hist_x, hist_y, color='k', width=width, bottom=bottom, alpha=0.3)
+    return ax, bottom
+
+# Information
+st.text('Tree model Analysis Tool | v0.6')
+
+# Create Session
+ss = SessionState.get(
+    datas=None,
+    output=None,
+    is_model_selection=False,
+    shap_value=None,
+    importance=None,
+)
 
 # Load Data
 filename = st.selectbox(
@@ -90,13 +108,10 @@ if st.button(f'Calculate ({target[0]})'):
         df_data = select_feature(df, features, target)
         datas = split_data(df_data, n_splits=CFG.n_splits)
         st.text(f'[{datetime.now()}] Done: Data separation.')
+        st.text('')
 
         output = select_model(model_list, datas, features, target, metric=metric)
-        st.text(f'[{datetime.now()}] Done: Model selection.')
-
         shap_source, shap_value = get_shap_value(output['weights'], datas, features, max_num=CFG.max_shap_data_num)
-        st.text(f'[{datetime.now()}] Done: SHAP Value calculation.')
-
         feature_names, feature_importances = get_feature_importance(shap_value, features, sort=True)
 
         ss.datas = datas
@@ -150,11 +165,11 @@ if ss.is_model_selection:
     ax.tick_params(axis='both', labelsize=12)
     st.pyplot(fig)
 
-    # Plot Simulation
+    # Plot SHAP, Simulation
     graph = st.selectbox(
         'Graph', 
         ['SHAP', 'Simulation'],
-        index=1
+        index=0
     )
     feature = st.selectbox(
         'Feature', 
@@ -167,27 +182,11 @@ if ss.is_model_selection:
         x = ss.shap_source[features[index]].values
         y = ss.shap_value[:, index]
 
-        x_min = np.min(x)
-        x_max = np.max(x)
-        x_range = x_max - x_min
-
-        y_min = np.min(y)
-        y_max = np.max(y)
-        y_range = y_max - y_min
-
-        bins = np.arange(x_min, x_max, x_range*0.01)
-        hist_y, hist_x = np.histogram(x, bins=bins)
-        hist_x = (hist_x[:-1] + hist_x[1:]) / 2
-        hist_y = np.minimum(hist_y, np.percentile(hist_y, 98))
-        hist_y = 0.1 * y_range * hist_y / np.max(hist_y)
-        width = np.mean(np.abs(hist_x[1:]-hist_x[:-1]))
-
         fig, ax = plt.subplots()
-
         ax.scatter(x, y, s=20, color='#EA4A54')
         ax.set_title(f'Target = {target[0]}')
-        ax.bar(hist_x, hist_y, color='k', width=width, bottom=y_min-y_range*0.1, alpha=0.5)
-        ax.set_ylim(bottom=y_min-y_range*0.1)
+        ax, bottom = add_histogram(ax, x, y)
+        ax.set_ylim(bottom=bottom)
         ax.set_xlabel(f'{feature}', fontsize=13)
         ax.set_ylabel(f'SHAP Values for\n{feature}', fontsize=13)
         ax.tick_params(axis='both', labelsize=12)
@@ -209,8 +208,10 @@ if ss.is_model_selection:
 
         fig, ax = plt.subplots()
         ax.set_title(f'Target = {target[0]}')
-        ax.scatter(x, y, color='#EA4A54')
+        ax.plot(x, y, color='#EA4A54')
+        ax, bottom = add_histogram(ax, data, y)
         ax.set_xlim(x_set_min, x_set_max)
+        ax.set_ylim(bottom=bottom)
         ax.set_xlabel(f'{feature}', fontsize=13)
         ax.set_ylabel(f'Pred. {target[0]}', fontsize=13)
         ax.tick_params(axis='both', labelsize=12)

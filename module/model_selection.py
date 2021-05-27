@@ -1,4 +1,6 @@
 import numpy as np
+import streamlit as st
+from datetime import datetime
 from lightgbm import LGBMRegressor
 from xgboost import XGBRegressor
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor
@@ -40,10 +42,11 @@ def select_model(model_list, datas, features, target, metric='mae'):
     metrics = ['r2', 'mae', 'mse', 'rmse']
     assert metric in metrics, f'metric not in {metrics}.'
 
+    number = len(datas)
     models, scores, oobs = [], [], []
     for model_name in model_list:
         model, oob_true, oob_pred = [], [], []
-        score = 0
+        score, i = 0, 1
         for df_train, df_valid in datas:
             # Train Model
             m = trainer(df_train, features, target, model_name=model_name)
@@ -67,11 +70,20 @@ def select_model(model_list, datas, features, target, metric='mae'):
                 s = mse_score(true, pred)
             if metric == 'rmse':
                 s = rmse_score(true, pred)
-            score += s
+
+            # Log
+            st.text(f'[{datetime.now()}] [{model_name}] ({i}/{number}) {metric}: {s}')
+
+            score += s / number
+            i += 1
 
         models.append(model)
         scores.append(score)
         oobs.append([oob_true, oob_pred])
+
+        # Log
+        st.text(f'[{datetime.now()}] [{model_name}] CV Score: {score}')
+        st.text('')
 
     index = np.argmin(scores)
     model = models[index]
