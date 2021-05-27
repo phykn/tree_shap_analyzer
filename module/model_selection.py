@@ -84,7 +84,7 @@ def select_model(model_list, datas, features, target, metric='mae'):
         oobs.append([oob_true, oob_pred])
 
         # Log
-        st.markdown(f'| {datetime.now()} | {model_name} | CV Score = {score}')
+        st.markdown(f'| {datetime.now()} | {model_name} | CV Score = {np.abs(score)}')
         st.markdown('')
 
     index = np.argmin(scores)
