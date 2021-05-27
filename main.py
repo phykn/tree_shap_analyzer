@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+from glob import glob
 from pandas.api.types import is_numeric_dtype
 from module.data_preparation import select_feature, split_data
 from module.model_selection import select_model
@@ -50,7 +51,11 @@ def load_data(filename, n=10000):
     return df
 
 # Load Data
-filename = st.text_input('File path:', 'data/sample_data.csv')
+filename = st.selectbox(
+    'File',
+    glob('data/*.csv'),
+    index=0
+)
 df = load_data(filename, n=CFG.max_num_data)
 columns = list(df.columns)
 
