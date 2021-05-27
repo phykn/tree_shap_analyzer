@@ -20,7 +20,7 @@ def get_shap_value(weights, datas, features, max_num=1000):
         shap_value.append(s)
 
         # Log
-        st.text(f'[{datetime.now()}] [SHAP] ({i}/{number})')    
+        st.markdown(f'[{datetime.now()}] [SHAP] ({i}/{number})')    
         i += 1
 
     shap_source = pd.concat(shap_source, axis=0)
