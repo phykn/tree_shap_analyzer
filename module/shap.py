@@ -6,6 +6,7 @@ from datetime import datetime
 shap.initjs()
 
 def get_shap_value(weights, datas, features, max_num=1000):
+    st.markdown(f'| {datetime.now()} | Getting SHAP Value')
     number = len(datas)
     shap_source, shap_value = [], []
     df_valids = [df_valid for df_train, df_valid in datas]
@@ -20,7 +21,7 @@ def get_shap_value(weights, datas, features, max_num=1000):
         shap_value.append(s)
 
         # Log
-        st.markdown(f'[{datetime.now()}] SHAP ({i}/{number})')    
+        st.markdown(f'| {datetime.now()} | SHAP | {i}/{number} |')    
         i += 1
 
     shap_source = pd.concat(shap_source, axis=0)

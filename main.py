@@ -79,7 +79,7 @@ columns = list(df.columns)
 
 # Select Feature
 st.text(f'Select Features (Maximum: {CFG.max_num_feature})')
-feature_index = [st.checkbox(f'{column}', value=True) for column in columns]
+feature_index = [st.checkbox(f'{column}', value=False) for column in columns]
 features = list(np.array(columns)[feature_index])
 st.text(f'Feature Number: {np.sum(feature_index)}')
 
@@ -107,9 +107,6 @@ if st.button(f'Calculate ({target[0]})'):
     else:
         df_data = select_feature(df, features, target)
         datas = split_data(df_data, n_splits=CFG.n_splits)
-        st.markdown(f'[{datetime.now()}] Done: Data separation.')
-        st.markdown('')
-
         output = select_model(model_list, datas, features, target, metric=metric)
         shap_source, shap_value = get_shap_value(output['weights'], datas, features, max_num=CFG.max_shap_data_num)
         feature_names, feature_importances = get_feature_importance(shap_value, features, sort=True)

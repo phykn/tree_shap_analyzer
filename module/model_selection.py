@@ -42,6 +42,8 @@ def select_model(model_list, datas, features, target, metric='mae'):
     metrics = ['r2', 'mae', 'mse', 'rmse']
     assert metric in metrics, f'metric not in {metrics}.'
 
+    st.markdown(f'| {datetime.now()} | Start Training')
+    st.markdown('')
     number = len(datas)
     models, scores, oobs = [], [], []
     for model_name in model_list:
@@ -72,7 +74,7 @@ def select_model(model_list, datas, features, target, metric='mae'):
                 s = rmse_score(true, pred)
 
             # Log
-            st.markdown(f"[{datetime.now()}] {model_name} ({i}/{number}) {metric}: {s}")
+            st.markdown(f'| {datetime.now()} | {model_name} | {i}/{number} | {metric} = {s}')
 
             score += s / number
             i += 1
@@ -82,7 +84,7 @@ def select_model(model_list, datas, features, target, metric='mae'):
         oobs.append([oob_true, oob_pred])
 
         # Log
-        st.markdown(f'[{datetime.now()}] {model_name} CV Score: {score}')
+        st.markdown(f'| {datetime.now()} | {model_name} | CV Score = {score}')
         st.markdown('')
 
     index = np.argmin(scores)
