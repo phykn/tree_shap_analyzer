@@ -15,10 +15,11 @@ warnings.filterwarnings(action='ignore')
 class CFG:
     max_num_data = 10000
     max_num_feature = 30
-    n_splits = 5
+    n_splits = 4
+    max_shap_data_num = 100
 
 # Information
-st.text('Tree model Analysis Tool | v0.5')
+st.text('Tree model Analysis Tool | v0.6')
 
 # Create Session
 ss = SessionState.get(
@@ -52,7 +53,7 @@ columns = list(df.columns)
 
 # Select Feature
 st.text(f'Select Features (Maximum: {CFG.max_num_feature})')
-feature_index = [st.checkbox(f'{column}', value=False) for column in columns]
+feature_index = [st.checkbox(f'{column}', value=True) for column in columns]
 features = list(np.array(columns)[feature_index])
 st.text(f'Feature Number: {np.sum(feature_index)}')
 
@@ -85,7 +86,7 @@ if st.button(f'Calculate ({target[0]})'):
         output = select_model(model_list, datas, features, target, metric=metric)
         st.text(f'[{datetime.now()}] Done: Model selection.')
 
-        shap_value = get_shap_value(output['weights'], datas, features)
+        shap_source, shap_value = get_shap_value(output['weights'], datas, features, max_num=CFG.max_shap_data_num)
         st.text(f'[{datetime.now()}] Done: SHAP Value calculation.')
 
         feature_names, feature_importances = get_feature_importance(shap_value, features, sort=True)
@@ -93,6 +94,7 @@ if st.button(f'Calculate ({target[0]})'):
         ss.datas = datas
         ss.output = output
         ss.is_model_selection = True
+        ss.shap_source = shap_source
         ss.shap_value = shap_value
         ss.importance = (feature_names, feature_importances)
 
@@ -148,7 +150,7 @@ if ss.is_model_selection:
     )
 
     index = np.where(np.array(features)==feature)[0][0]
-    x = np.concatenate([df_valid[features[index]].values for df_train, df_valid in ss.datas], axis=0)
+    x = ss.shap_source[features[index]].values
     y = ss.shap_value[:, index]
 
     x_min = np.min(x)
