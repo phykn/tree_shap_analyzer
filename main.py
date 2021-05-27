@@ -7,6 +7,7 @@ from pandas.api.types import is_numeric_dtype
 from module.data_preparation import select_feature, split_data
 from module.model_selection import select_model
 from module.shap import get_shap_value, get_feature_importance
+from module.simulation import simulator
 import module.SessionState as SessionState
 import warnings
 warnings.filterwarnings(action='ignore')
@@ -17,6 +18,8 @@ class CFG:
     max_num_feature = 30
     n_splits = 4
     max_shap_data_num = 100
+    num_simulation = 1000
+
 
 # Information
 st.text('Tree model Analysis Tool | v0.6')
@@ -53,7 +56,7 @@ columns = list(df.columns)
 
 # Select Feature
 st.text(f'Select Features (Maximum: {CFG.max_num_feature})')
-feature_index = [st.checkbox(f'{column}', value=False) for column in columns]
+feature_index = [st.checkbox(f'{column}', value=True) for column in columns]
 features = list(np.array(columns)[feature_index])
 st.text(f'Feature Number: {np.sum(feature_index)}')
 
@@ -143,38 +146,67 @@ if ss.is_model_selection:
     st.pyplot(fig)
 
     # Plot Simulation
+    graph = st.selectbox(
+        'Graph', 
+        ['SHAP', 'Simulation'],
+        index=1
+    )
     feature = st.selectbox(
         'Feature', 
         feature_names,
         index=0
     )
-
     index = np.where(np.array(features)==feature)[0][0]
-    x = ss.shap_source[features[index]].values
-    y = ss.shap_value[:, index]
 
-    x_min = np.min(x)
-    x_max = np.max(x)
-    x_range = x_max - x_min
+    if graph == 'SHAP':        
+        x = ss.shap_source[features[index]].values
+        y = ss.shap_value[:, index]
 
-    y_min = np.min(y)
-    y_max = np.max(y)
-    y_range = y_max - y_min
+        x_min = np.min(x)
+        x_max = np.max(x)
+        x_range = x_max - x_min
 
-    bins = np.arange(x_min, x_max, x_range*0.01)
-    hist_y, hist_x = np.histogram(x, bins=bins)
-    hist_x = (hist_x[:-1] + hist_x[1:]) / 2
-    hist_y = np.minimum(hist_y, np.percentile(hist_y, 98))
-    hist_y = 0.1 * y_range * hist_y / np.max(hist_y)
-    width = np.mean(np.abs(hist_x[1:]-hist_x[:-1]))
+        y_min = np.min(y)
+        y_max = np.max(y)
+        y_range = y_max - y_min
 
-    fig, ax = plt.subplots()
+        bins = np.arange(x_min, x_max, x_range*0.01)
+        hist_y, hist_x = np.histogram(x, bins=bins)
+        hist_x = (hist_x[:-1] + hist_x[1:]) / 2
+        hist_y = np.minimum(hist_y, np.percentile(hist_y, 98))
+        hist_y = 0.1 * y_range * hist_y / np.max(hist_y)
+        width = np.mean(np.abs(hist_x[1:]-hist_x[:-1]))
 
-    ax.scatter(x, y, s=20, color='#EA4A54')
-    ax.set_title(f'Target = {target[0]}')
-    ax.bar(hist_x, hist_y, color='k', width=width, bottom=y_min-y_range*0.1, alpha=0.5)
-    ax.set_ylim(bottom=y_min-y_range*0.1)
-    ax.set_xlabel(f'{feature}', fontsize=13)
-    ax.set_ylabel(f'SHAP Values for\n{feature}', fontsize=13)
-    ax.tick_params(axis='both', labelsize=12)
-    st.pyplot(fig)
+        fig, ax = plt.subplots()
+
+        ax.scatter(x, y, s=20, color='#EA4A54')
+        ax.set_title(f'Target = {target[0]}')
+        ax.bar(hist_x, hist_y, color='k', width=width, bottom=y_min-y_range*0.1, alpha=0.5)
+        ax.set_ylim(bottom=y_min-y_range*0.1)
+        ax.set_xlabel(f'{feature}', fontsize=13)
+        ax.set_ylabel(f'SHAP Values for\n{feature}', fontsize=13)
+        ax.tick_params(axis='both', labelsize=12)
+        st.pyplot(fig)
+
+    elif graph == 'Simulation':
+        data = df[features[index]].dropna().values
+        x_min, x_max = float(np.min(data)), float(np.max(data))
+
+        x_set_min, x_set_max = st.slider(
+            'Select a range of values',
+            min_value=x_min, 
+            max_value=x_max,
+            value=(x_min, x_max),
+            step=(x_max-x_min)/100
+        )
+
+        x, y = simulator(df, ss.output, features, feature, x_set_min, x_set_max, n=CFG.num_simulation)
+
+        fig, ax = plt.subplots()
+        ax.set_title(f'Target = {target[0]}')
+        ax.scatter(x, y, color='#EA4A54')
+        ax.set_xlim(x_set_min, x_set_max)
+        ax.set_xlabel(f'{feature}', fontsize=13)
+        ax.set_ylabel(f'Pred. {target[0]}', fontsize=13)
+        ax.tick_params(axis='both', labelsize=12)
+        st.pyplot(fig)
