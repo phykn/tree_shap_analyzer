@@ -53,7 +53,7 @@ columns = list(df.columns)
 
 # Select Feature
 st.text(f'Select Features (Maximum: {CFG.max_num_feature})')
-feature_index = [st.checkbox(f'{column}', value=True) for column in columns]
+feature_index = [st.checkbox(f'{column}', value=False) for column in columns]
 features = list(np.array(columns)[feature_index])
 st.text(f'Feature Number: {np.sum(feature_index)}')
 
