@@ -74,7 +74,7 @@ def select_model(model_list, datas, features, target, metric='mae'):
                 s = rmse_score(true, pred)
 
             # Log
-            st.markdown(f'| {datetime.now()} | {model_name} | {i}/{number} | {metric} = {s}')
+            st.markdown(f'| {datetime.now()} | {model_name} | {i}/{number} | {metric} = {np.abs(s)}')
 
             score += s / number
             i += 1
