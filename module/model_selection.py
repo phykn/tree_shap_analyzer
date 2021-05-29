@@ -45,7 +45,7 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
                 s = -1 * accuracy_score(true, pred)
 
             # Log
-            st.markdown(f'| {datetime.now()} | {model_name} | {i}/{number} | {metric} = {np.abs(s)}')
+            st.markdown(f'{datetime.now()} | {model_name} | {i}/{number} | {metric} = {np.abs(s)}')
 
             score += s / number
             i += 1
@@ -55,7 +55,7 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
         oobs.append([oob_true, oob_pred])
 
         # Log
-        st.markdown(f'| {datetime.now()} | {model_name} | CV Score = {np.abs(score)}')
+        st.markdown(f'{datetime.now()} | {model_name} | CV Score = {np.abs(score)}')
         st.markdown('')
 
     index = np.argmin(scores)
@@ -69,6 +69,6 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
     output['features'] = features
     output['targets'] = targets
     output['models'] =  model
-    output['oob_true'] = oob[0]
-    output['oob_pred'] = oob[1]
+    output['oob_true'] = np.array(oob[0])
+    output['oob_pred'] = np.array(oob[1])
     return output

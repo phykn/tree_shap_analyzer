@@ -8,7 +8,7 @@ import gc
 from glob import glob
 from datetime import datetime
 from pandas.api.types import is_numeric_dtype
-from module.metrics import r2_score, auc_score, accuracy_score
+from module.metrics import *
 from module.data_preparation import select_feature, split_data, del_outlier
 from module.model_selection import select_model
 from module.shap import get_feature_importance, get_shap_value_from_output, get_important_feature
@@ -171,11 +171,21 @@ if ss.is_model_selection:
     pred = output['oob_pred']
 
     # Plot Training Result
-    if mode == 'Regression':
+    st.markdown('### Training Result')
+    st.markdown(f'Mode: {mode}')
+    st.markdown(f'Model: {model_name}')
+
+    if mode == 'Regression':        
+        st.markdown(f'MAE: {mae_score(true, pred)}')
+        st.markdown(f'MSE: {mse_score(true, pred)}')
+        st.markdown(f'RMSE: {rmse_score(true, pred)}')
+        st.markdown(f'R2 Score: {r2_score(true, pred):.4f}')
+        st.markdown('')
+
         minimum = np.minimum(np.min(true), np.min(pred))
         maximum = np.maximum(np.max(true), np.max(pred))
         fig, ax = plt.subplots()
-        ax.set_title(f'Model: {output["model_name"]}, R$^{2}$: {r2_score(true, pred):.4f}')
+        ax.set_title(f'Target = {targets[0]}', fontsize=13)
         ax.scatter(true, pred, color='#EA4A54')
         ax.plot([minimum, maximum], [minimum, maximum], ls='--', lw=2, color='k')
         ax.set_xlim(minimum, maximum)
@@ -188,8 +198,11 @@ if ss.is_model_selection:
     elif mode == 'Classification':
         st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
         st.markdown(f'AUC: {auc_score(true, pred):.4f}')
+        st.markdown('')
 
     # Plot Feature Importance
+    st.markdown('### Feature Importance')
+
     num_init = np.minimum(10, len(feature_names))
     show_number = st.number_input(
         'Feature Number',
@@ -199,7 +212,7 @@ if ss.is_model_selection:
         step=1
     )
     fig, ax = plt.subplots()
-    ax.set_title(f'Target = {targets[0]}')
+    ax.set_title(f'Target = {targets[0]}', fontsize=13)
     ax.barh(feature_names[:show_number][::-1], feature_importances[:show_number][::-1], color='#EA4A54')
     ax.set_xlim(left=0)
     ax.set_ylim(-1, show_number)
@@ -207,17 +220,18 @@ if ss.is_model_selection:
     ax.tick_params(axis='both', labelsize=12)
     st.pyplot(fig)
 
-    # Graph and Feature Selection
-    graph = st.selectbox('Graph', ['SHAP', 'Simulation'], index=0)
+    # Analysis Type and Feature Selection
+    st.markdown('### Model Analysis')
+    type_name = st.selectbox('Type', ['SHAP', 'Simulation'], index=0)
     feature = st.selectbox('Feature', feature_names, index=0)
     index = np.where(np.array(features)==feature)[0][0]
 
-    if graph == 'SHAP':        
+    if type_name == 'SHAP':        
         x = shap_source[features[index]].values
         y = shap_value[:, index]
         fig, ax = plt.subplots()
-        ax.scatter(x, y, s=20, color='#EA4A54')
-        ax.set_title(f'Target = {targets[0]}')
+        ax.set_title(f'Target = {targets[0]}', fontsize=13)
+        ax.scatter(x, y, s=20, color='#EA4A54')        
         ax, bottom = add_histogram(ax, x, y)
         ax.set_ylim(bottom=bottom)
         ax.set_xlabel(f'{feature}', fontsize=13)
@@ -225,7 +239,7 @@ if ss.is_model_selection:
         ax.tick_params(axis='both', labelsize=12)
         st.pyplot(fig)
 
-    elif graph == 'Simulation':
+    elif type_name == 'Simulation':
         data = df_data[features[index]].dropna().values
         x_min, x_max = float(np.min(data)), float(np.max(data))
         x_set_min, x_set_max = st.slider(
@@ -246,7 +260,7 @@ if ss.is_model_selection:
             n=CFG.num_simulation
         )
         fig, ax = plt.subplots()
-        ax.set_title(f'Target = {targets[0]}')
+        ax.set_title(f'Target = {targets[0]}', fontsize=13)
         ax.plot(x, y, color='#EA4A54')
         ax, bottom = add_histogram(ax, data, y)
         ax.set_xlim(x_set_min, x_set_max)
