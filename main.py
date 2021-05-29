@@ -27,7 +27,7 @@ class CFG:
     n_splits = 4
     max_shap_data_num = 500
     num_simulation = 1000
-    del_outlier = True
+    outlier_process = True
     lower_limit=0.01
     upper_limit=0.99
 
@@ -62,7 +62,7 @@ file_path = st.selectbox('File', glob('data/*.csv'), index=1)
 df_data = load_data(file_path)
 
 # Delete Outlier
-if CFG.del_outlier:
+if CFG.outlier_process:
     df_data = del_outlier(df_data, lower_limit=CFG.lower_limit, upper_limit=CFG.upper_limit)
 
 # Get Column
