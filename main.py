@@ -1,35 +1,53 @@
+# Import Library
+import os
 import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+import gc
 from glob import glob
 from datetime import datetime
 from pandas.api.types import is_numeric_dtype
-from module.data_preparation import select_feature, split_data
+from module.metrics import r2_score, auc_score, accuracy_score
+from module.data_preparation import select_feature, split_data, del_outlier
 from module.model_selection import select_model
-from module.shap import get_shap_value, get_feature_importance
+from module.shap import get_feature_importance, get_shap_value_from_output, get_important_feature
 from module.simulation import simulator
+from module.helper import add_histogram
 import module.SessionState as SessionState
 import warnings
 warnings.filterwarnings(action='ignore')
 
+# Head
+st.markdown('# Model Analyzer ver 0.7')
+
 # Config
 class CFG:
-    max_num_data = 10000
-    max_num_feature = 30
+    n_jobs = os.cpu_count()
     n_splits = 4
-    max_shap_data_num = 100
+    max_shap_data_num = 500
     num_simulation = 1000
+    del_outlier = True
+    lower_limit=0.01
+    upper_limit=0.99
 
-# Define Function
+# Create Session
+ss = SessionState.get(
+    is_model_selection = None,
+    df_data = None,
+    datas = None,
+    output = None,     
+    shap_source = None,
+    shap_value = None,
+    feature_names = None,
+    feature_importances = None
+)
+
+# Load Data
 @st.cache()
-def load_data(filename, n=10000):
+def load_data(file_path):
     # Load Data
-    df = pd.read_csv(filename)
-   
-    # Sampling
-    if len(df) > n:
-        df = df.sample(n=n)
+    df = pd.read_csv(file_path)
 
     # Select Column
     columns = df.columns
@@ -37,151 +55,169 @@ def load_data(filename, n=10000):
     df = df[columns]
     return df
 
-def add_histogram(ax, x, y):
-    x_min = np.min(x)
-    x_max = np.max(x)
-    x_range = x_max - x_min
-
-    y_min = np.min(y)
-    y_max = np.max(y)
-    y_range = y_max - y_min
-
-    bins = np.arange(x_min, x_max, x_range*0.01)
-    hist_y, hist_x = np.histogram(x, bins=bins)
-    hist_x = (hist_x[:-1] + hist_x[1:]) / 2
-    hist_y = np.minimum(hist_y, np.percentile(hist_y, 98))
-    hist_y = 0.1 * y_range * hist_y / np.max(hist_y)
-    width = np.mean(np.abs(hist_x[1:]-hist_x[:-1]))
-    bottom = y_min-y_range*0.1
-    ax.bar(hist_x, hist_y, color='k', width=width, bottom=bottom, alpha=0.3)
-    return ax, bottom
-
-# Information
-st.text('Tree model Analysis Tool | v0.6')
-
-# Create Session
-ss = SessionState.get(
-    datas=None,
-    output=None,
-    is_model_selection=False,
-    shap_value=None,
-    importance=None,
-)
+# Get File path
+file_path = st.selectbox('File', glob('data/*.csv'), index=1)
 
 # Load Data
-filename = st.selectbox(
-    'File',
-    glob('data/*.csv'),
-    index=0
-)
-df = load_data(filename, n=CFG.max_num_data)
-columns = list(df.columns)
+df_data = load_data(file_path)
 
-# Select Feature
-st.text(f'Select Features (Maximum: {CFG.max_num_feature})')
-feature_index = [st.checkbox(f'{column}', value=False) for column in columns]
-features = list(np.array(columns)[feature_index])
-st.text(f'Feature Number: {np.sum(feature_index)}')
+# Delete Outlier
+if CFG.del_outlier:
+    df_data = del_outlier(df_data, lower_limit=CFG.lower_limit, upper_limit=CFG.upper_limit)
 
-# Select Models
-model_list = st.multiselect(
-    'Model',
-    ['lgb', 'xgb', 'rf', 'et', 'gbr'],
-    default=['lgb', 'xgb', 'rf', 'et', 'gbr'],
-)
-
-# Select Metric
-metric = st.selectbox(
-    'Metric',
-    ['r2', 'mae', 'mse', 'rmse'],
-    index=1
-)
+# Get Column
+df_data_columns = list(df_data.columns)
 
 # Select Target
-target = [st.selectbox('Target', [column for column in columns if column not in features])]
+targets = [st.selectbox('Target', df_data_columns)]
 
-if st.button(f'Calculate ({target[0]})'):
-    if np.sum(feature_index) > CFG.max_num_feature:
-        st.text('Maximum number of features exceeded.')
+# Select Mode
+mode = st.selectbox('Mode', ['Regression', 'Classification'])
+if mode == 'Classification':
+    # Model and Metric
+    _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
+    _metric = ['auc', 'accuracy']
 
-    else:
-        df_data = select_feature(df, features, target)
-        datas = split_data(df_data, n_splits=CFG.n_splits)
-        output = select_model(model_list, datas, features, target, metric=metric)
-        shap_source, shap_value = get_shap_value(output['weights'], datas, features, max_num=CFG.max_shap_data_num)
+    # Convert Value
+    values = df_data[targets[0]].dropna().values
+    min_value, max_value = float(np.min(values)), float(np.max(values))
+    cutoff = st.slider(
+        'Cut Off',
+        min_value=min_value, 
+        max_value=max_value,
+        value=(max_value+min_value)/2,
+        step=(max_value-min_value)/100
+    )
+    values = df_data[targets[0]].values
+    index_0 = np.where(values <= cutoff) 
+    index_1 = np.where(values > cutoff)
+    values[index_0] = 0
+    values[index_1] = 1
+    df_data[targets[0]] = values
+    st.text(f'Class 0: {len(index_0[0])}, Class 1: {len(index_1[0])}')
+
+elif mode == 'Regression':
+    _model_list = ['lgb_reg', 'xgb_reg', 'rf_reg', 'et_reg']
+    _metric = ['mae', 'mse', 'rmse', 'r2']    
+else:
+    raise ValueError
+
+# Select Models
+model_list = st.sidebar.multiselect('Model', _model_list, default=_model_list)
+
+# Select Metric
+metric = st.sidebar.selectbox('Metric', _metric, index=0)
+
+# Set Feature Selection
+importance_cut_value = st.sidebar.number_input('Importance Cut Value', value=90, min_value=80, max_value=100, step=1)
+
+# Select Feature
+st.sidebar.text(f'Select Features')
+features = [column for column in df_data_columns if column not in targets]
+feature_index = [st.sidebar.checkbox(f'{feature}', value=True) for feature in features]
+features = list(np.array(features)[feature_index])
+
+# Button
+if st.button(f'Calculate ({targets[0]})'):
+    # 1st Training
+    st.markdown('### Start Training')
+    st.markdown('')
+    df_data = select_feature(df_data, features, targets)
+    datas = split_data(df_data, features, targets, mode, n_splits=CFG.n_splits)
+    output = select_model(model_list, datas, features, targets, metric=metric, n_jobs=CFG.n_jobs)
+    shap_source, shap_value = get_shap_value_from_output(output, datas, max_num=CFG.max_shap_data_num)
+    feature_names, feature_importances = get_feature_importance(shap_value, features, sort=True)
+
+    # 2nd Training
+    if importance_cut_value < 100:
+        features = get_important_feature(feature_names, feature_importances, cut=importance_cut_value)
+        st.markdown(f'### Feature Selection: {len(feature_names)} > {len(features)}')
+        st.text(f'')
+
+        df_data = select_feature(df_data, features, targets)
+        datas = split_data(df_data, features, targets, mode, n_splits=CFG.n_splits)
+        output = select_model(model_list, datas, features, targets, metric=metric, n_jobs=CFG.n_jobs)
+        shap_source, shap_value = get_shap_value_from_output(output, datas, max_num=CFG.max_shap_data_num)
         feature_names, feature_importances = get_feature_importance(shap_value, features, sort=True)
 
-        ss.datas = datas
-        ss.output = output
-        ss.is_model_selection = True
-        ss.shap_source = shap_source
-        ss.shap_value = shap_value
-        ss.importance = (feature_names, feature_importances)
+    # Save output to Session
+    ss.is_model_selection = True
+    ss.df_data = df_data
+    ss.datas = datas  
+    ss.output = output      
+    ss.shap_source = shap_source
+    ss.shap_value = shap_value
+    ss.feature_names = feature_names
+    ss.feature_importances = feature_importances
+    gc.collect()
 
 # Plot Graph
 if ss.is_model_selection:
     # Load Data
-    output = ss.output
-    feature_names, feature_importances = ss.importance
+    df_data = ss.df_data
+    datas = ss.datas  
+    output = ss.output      
+    shap_source = ss.shap_source
+    shap_value = ss.shap_value
+    feature_names = ss.feature_names
+    feature_importances = ss.feature_importances
+
+    number = output['fold']
+    model_name = output['model_name']
+    features = output['features']
+    targets = output['targets']
+    models = output['models']
+    true = output['oob_true']
+    pred = output['oob_pred']
 
     # Plot Training Result
-    true = np.array(output['oob_true'])
-    pred = np.array(output['oob_pred'])
-    r2 = np.corrcoef(true, pred)[0][1]**2
-    mae = np.mean(np.abs(true-pred))
-    minimum = np.minimum(np.min(true), np.min(pred))
-    maximum = np.maximum(np.max(true), np.max(pred))
+    if mode == 'Regression':
+        minimum = np.minimum(np.min(true), np.min(pred))
+        maximum = np.maximum(np.max(true), np.max(pred))
+        fig, ax = plt.subplots()
+        ax.set_title(f'Model: {output["model_name"]}, R$^{2}$: {r2_score(true, pred):.4f}')
+        ax.scatter(true, pred, color='#EA4A54')
+        ax.plot([minimum, maximum], [minimum, maximum], ls='--', lw=2, color='k')
+        ax.set_xlim(minimum, maximum)
+        ax.set_ylim(minimum, maximum)
+        ax.set_xlabel('Ground Truth', fontsize=13)
+        ax.set_ylabel('Prediction', fontsize=13)
+        ax.tick_params(axis='both', labelsize=12)
+        st.pyplot(fig)
 
-    fig, ax = plt.subplots()
-    ax.set_title(f'Model: {output["model"]}, R$^{2}$: {r2:.4f}, MAE: {mae:.4f}')
-    ax.scatter(true, pred, color='#EA4A54')
-    ax.plot([minimum, maximum], [minimum, maximum], ls='--', lw=2, color='k')
-    ax.set_xlim(minimum, maximum)
-    ax.set_ylim(minimum, maximum)
-    ax.set_xlabel('Ground Truth', fontsize=13)
-    ax.set_ylabel('Prediction', fontsize=13)
-    ax.tick_params(axis='both', labelsize=12)
-    st.pyplot(fig)
+    elif mode == 'Classification':
+        st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
+        st.markdown(f'AUC: {auc_score(true, pred):.4f}')
 
     # Plot Feature Importance
     num_init = np.minimum(10, len(feature_names))
-    num = st.number_input(
+    show_number = st.number_input(
         'Feature Number',
         value=num_init,
         min_value=1,
         max_value=len(feature_names),
         step=1
     )
-
     fig, ax = plt.subplots()
-    ax.set_title(f'Target = {target[0]}')
-    ax.barh(feature_names[:num][::-1], feature_importances[:num][::-1], color='#EA4A54')
+    ax.set_title(f'Target = {targets[0]}')
+    ax.barh(feature_names[:show_number][::-1], feature_importances[:show_number][::-1], color='#EA4A54')
     ax.set_xlim(left=0)
-    ax.set_ylim(-1, num)
+    ax.set_ylim(-1, show_number)
     ax.set_xlabel('Feature Importance (%)', fontsize=13)
     ax.tick_params(axis='both', labelsize=12)
     st.pyplot(fig)
 
-    # Plot SHAP, Simulation
-    graph = st.selectbox(
-        'Graph', 
-        ['SHAP', 'Simulation'],
-        index=0
-    )
-    feature = st.selectbox(
-        'Feature', 
-        feature_names,
-        index=0
-    )
+    # Graph and Feature Selection
+    graph = st.selectbox('Graph', ['SHAP', 'Simulation'], index=0)
+    feature = st.selectbox('Feature', feature_names, index=0)
     index = np.where(np.array(features)==feature)[0][0]
 
     if graph == 'SHAP':        
-        x = ss.shap_source[features[index]].values
-        y = ss.shap_value[:, index]
-
+        x = shap_source[features[index]].values
+        y = shap_value[:, index]
         fig, ax = plt.subplots()
         ax.scatter(x, y, s=20, color='#EA4A54')
-        ax.set_title(f'Target = {target[0]}')
+        ax.set_title(f'Target = {targets[0]}')
         ax, bottom = add_histogram(ax, x, y)
         ax.set_ylim(bottom=bottom)
         ax.set_xlabel(f'{feature}', fontsize=13)
@@ -190,9 +226,8 @@ if ss.is_model_selection:
         st.pyplot(fig)
 
     elif graph == 'Simulation':
-        data = df[features[index]].dropna().values
+        data = df_data[features[index]].dropna().values
         x_min, x_max = float(np.min(data)), float(np.max(data))
-
         x_set_min, x_set_max = st.slider(
             'Select a range of values',
             min_value=x_min, 
@@ -200,16 +235,23 @@ if ss.is_model_selection:
             value=(x_min, x_max),
             step=(x_max-x_min)/100
         )
-
-        x, y = simulator(df, ss.output, features, feature, x_set_min, x_set_max, n=CFG.num_simulation)
-
+        x, y = simulator(
+            df_data, 
+            models,
+            features, 
+            feature, 
+            x_set_min, 
+            x_set_max, 
+            mode=mode,
+            n=CFG.num_simulation
+        )
         fig, ax = plt.subplots()
-        ax.set_title(f'Target = {target[0]}')
+        ax.set_title(f'Target = {targets[0]}')
         ax.plot(x, y, color='#EA4A54')
         ax, bottom = add_histogram(ax, data, y)
         ax.set_xlim(x_set_min, x_set_max)
         ax.set_ylim(bottom=bottom)
         ax.set_xlabel(f'{feature}', fontsize=13)
-        ax.set_ylabel(f'Pred. {target[0]}', fontsize=13)
+        ax.set_ylabel(f'Pred. {targets[0]}', fontsize=13)
         ax.tick_params(axis='both', labelsize=12)
         st.pyplot(fig)
