@@ -109,7 +109,7 @@ model_list = st.sidebar.multiselect('Model', _model_list, default=_model_list)
 metric = st.sidebar.selectbox('Metric', _metric, index=0)
 
 # Set Feature Selection
-importance_cut_value = st.sidebar.number_input('Importance Cut Value', value=90, min_value=80, max_value=100, step=1)
+importance_cut_value = st.sidebar.number_input('Importance Cut Value', value=95, min_value=80, max_value=100, step=1)
 
 # Select Feature
 st.sidebar.text(f'Select Features')
