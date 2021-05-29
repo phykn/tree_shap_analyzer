@@ -56,7 +56,7 @@ def load_data(file_path):
     return df
 
 # Get File path
-file_path = st.selectbox('File', glob('data/*.csv'), index=1)
+file_path = st.selectbox('File', glob('data/*.csv'), index=0)
 
 # Load Data
 df_data = load_data(file_path)
