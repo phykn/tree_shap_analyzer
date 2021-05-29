@@ -16,6 +16,9 @@ def rmse_score(true, pred):
 def auc_score(true, pred):
     return roc_auc_score(true, pred)
 
+def logloss_score(true, pred, epsilon=1e-7):
+    return -1*np.mean(true*np.log(pred+epsilon)+(1-true)*np.log(1-pred+epsilon))
+
 def accuracy_score(true, pred):
     true = np.round(true)
     pred = np.round(pred)

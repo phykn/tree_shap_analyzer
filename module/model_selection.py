@@ -1,11 +1,11 @@
 import numpy as np
 import streamlit as st
 from datetime import datetime
-from .metrics import r2_score, mae_score, mse_score, rmse_score, auc_score, accuracy_score
+from .metrics import *
 from .trainer import trainer
 
 def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1):
-    metrics = ['R2', 'MAE', 'MSE', 'RMSE', 'AUC', 'ACCURACY']
+    metrics = ['R2', 'MAE', 'MSE', 'RMSE', 'AUC', 'LOGLOSS', 'ACCURACY']
     assert metric in metrics, f'metric not in {metrics}.'
     
     number = len(datas)
@@ -41,6 +41,8 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
                 s = rmse_score(true, pred)
             if metric == 'AUC':
                 s = -1 * auc_score(true, pred)
+            if metric == 'LOGLOSS':
+                s = logloss_score(true, pred)
             if metric == 'ACCURACY':
                 s = -1 * accuracy_score(true, pred)
 

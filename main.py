@@ -76,7 +76,7 @@ mode = st.selectbox('Mode', ['Regression', 'Classification'])
 if mode == 'Classification':
     # Model and Metric
     _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
-    _metric = ['AUC', 'ACCURACY']
+    _metric = ['AUC', 'LOGLOSS', 'ACCURACY']
 
     # Convert Value
     values = df_data[targets[0]].dropna().values
@@ -196,8 +196,9 @@ if ss.is_model_selection:
         st.pyplot(fig)
 
     elif mode == 'Classification':
+        st.markdown(f'AUC: {auc_score(true, pred)}')
+        st.markdown(f'LOGLOSS: {logloss_score(true, pred)}')
         st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
-        st.markdown(f'AUC: {auc_score(true, pred):.4f}')
         st.markdown('')
 
     # Plot Feature Importance
