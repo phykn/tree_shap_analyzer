@@ -1,11 +1,11 @@
 import numpy as np
 import streamlit as st
 from datetime import datetime
-from .metrics import r2_score, mae_score, mse_score, rmse_score, auc_score
+from .metrics import r2_score, mae_score, mse_score, rmse_score, auc_score, accuracy_score
 from .trainer import trainer
 
-def select_model(model_names, datas, features, targets, metric='mae', n_jobs=-1):
-    metrics = ['r2', 'mae', 'mse', 'rmse', 'auc']
+def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1):
+    metrics = ['R2', 'MAE', 'MSE', 'RMSE', 'AUC', 'ACCURACY']
     assert metric in metrics, f'metric not in {metrics}.'
     
     number = len(datas)
@@ -31,16 +31,18 @@ def select_model(model_names, datas, features, targets, metric='mae', n_jobs=-1)
             oob_true += list(true)
             oob_pred += list(pred)
 
-            if metric == 'r2':
+            if metric == 'R2':
                 s = -1 * r2_score(true, pred)
-            if metric == 'mae':
+            if metric == 'MAE':
                 s = mae_score(true, pred)
-            if metric == 'mse':
+            if metric == 'MSE':
                 s = mse_score(true, pred)
-            if metric == 'rmse':
+            if metric == 'RMSE':
                 s = rmse_score(true, pred)
-            if metric == 'auc':
+            if metric == 'AUC':
                 s = -1 * auc_score(true, pred)
+            if metric == 'ACCURACY':
+                s = -1 * accuracy_score(true, pred)
 
             # Log
             st.markdown(f'| {datetime.now()} | {model_name} | {i}/{number} | {metric} = {np.abs(s)}')

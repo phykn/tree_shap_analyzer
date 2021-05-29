@@ -76,7 +76,7 @@ mode = st.selectbox('Mode', ['Regression', 'Classification'])
 if mode == 'Classification':
     # Model and Metric
     _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
-    _metric = ['auc', 'accuracy']
+    _metric = ['AUC', 'ACCURACY']
 
     # Convert Value
     values = df_data[targets[0]].dropna().values
@@ -98,7 +98,7 @@ if mode == 'Classification':
 
 elif mode == 'Regression':
     _model_list = ['lgb_reg', 'xgb_reg', 'rf_reg', 'et_reg']
-    _metric = ['mae', 'mse', 'rmse', 'r2']    
+    _metric = ['MAE', 'MSE', 'RMSE', 'R2']    
 else:
     raise ValueError
 
