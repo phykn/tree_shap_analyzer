@@ -352,13 +352,11 @@ if ss.is_model_selection:
             st.pyplot(fig)
            
     else:
-        ss = SessionState.get(
-            is_model_selection = None,
-            df_data = None,
-            datas = None,
-            output = None,     
-            shap_source = None,
-            shap_value = None,
-            feature_names = None,
-            feature_importances = None
-        )
+        ss.is_model_selection = None
+        ss.df_data = None
+        ss.datas = None
+        ss.output = None
+        ss.shap_source = None
+        ss.shap_value = None
+        ss.feature_names = None
+        ss.feature_importances = None
