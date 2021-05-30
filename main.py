@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings(action='ignore')
 
 # Head
-st.markdown('# Model Analyzer ver 0.7')
+st.markdown('# Model Analyzer ver 0.8')
 
 # Config
 class CFG:
