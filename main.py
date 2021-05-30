@@ -182,14 +182,14 @@ if ss.is_model_selection:
     # Plot Training Result
     if mode == output['mode']:
         st.markdown('### Training Result')
-        st.warning(f'Mode: {mode}')
-        st.warning(f'Model: {model_name}')  
+        st.markdown(f'Mode: {mode}')
+        st.markdown(f'Model: {model_name}')  
 
         if mode == 'Regression': 
-            st.warning(f'MAE: {mae_score(true, pred)}')
-            st.warning(f'MSE: {mse_score(true, pred)}')
-            st.warning(f'RMSE: {rmse_score(true, pred)}')
-            st.warning(f'R2 Score: {r2_score(true, pred):.4f}')
+            st.markdown(f'MAE: {mae_score(true, pred)}')
+            st.markdown(f'MSE: {mse_score(true, pred)}')
+            st.markdown(f'RMSE: {rmse_score(true, pred)}')
+            st.markdown(f'R2 Score: {r2_score(true, pred):.4f}')
             st.text('')
 
             minimum = np.minimum(np.min(true), np.min(pred))
@@ -206,9 +206,9 @@ if ss.is_model_selection:
             st.pyplot(fig)
 
         elif mode == 'Classification':
-            st.warning(f'AUC: {auc_score(true, pred)}')
-            st.warning(f'LOGLOSS: {logloss_score(true, pred)}')
-            st.warning(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
+            st.markdown(f'AUC: {auc_score(true, pred)}')
+            st.markdown(f'LOGLOSS: {logloss_score(true, pred)}')
+            st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
             st.text('')
 
         # Plot Feature Importance
