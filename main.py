@@ -77,9 +77,6 @@ if CFG.outlier_process:
 # Get Column
 df_data_columns = list(df_data.columns)
 
-# Select Target
-targets = [st.selectbox('Target', df_data_columns)]
-
 # Select Mode
 mode = st.selectbox('Mode', ['Regression', 'Classification'])
 if mode == 'Classification':
@@ -91,6 +88,8 @@ if mode == 'Classification':
     values = df_data[targets[0]].dropna().values
     min_value, max_value = float(np.min(values)), float(np.max(values))
 
+    # Select Target
+    targets = [st.selectbox('Target', df_data_columns)]
     cutoff = st.slider(
         'Cut Off',
         min_value=min_value, 
@@ -107,6 +106,8 @@ if mode == 'Classification':
     st.text(f'Class 0: {len(index_0[0])}, Class 1: {len(index_1[0])}')
 
 elif mode == 'Regression':
+    # Select Target
+    targets = [st.selectbox('Target', df_data_columns)]
     _model_list = ['lgb_reg', 'xgb_reg', 'rf_reg', 'et_reg']
     _metric = ['MAE', 'MSE', 'RMSE', 'R2']    
 else:
