@@ -101,7 +101,12 @@ if mode == 'Classification':
     values[index_0] = 0
     values[index_1] = 1
     df_data[targets[0]] = values
-    st.info(f'Class 0: {len(index_0[0])}, Class 1: {len(index_1[0])}')
+    
+    class0, class1 = st.beta_columns(2)
+    with class0:
+        st.info(f'Class 0 = {len(index_0[0])}')
+    with class1:
+        st.info(f'Class 1 = {len(index_1[0])}')
 
 elif mode == 'Regression':
     # Select Target
