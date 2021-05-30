@@ -36,6 +36,5 @@ def simulator_2d(df, models, features, feature_1, x1_min, x1_max, feature_2, x2_
         elif mode == 'Classification':
             pred = model.predict_proba(data)[:, 1]
         y.append(pred)
-    y = np.mean(y, axis=0)
-    
+    y = np.mean(y, axis=0)    
     return x1, x2, y.reshape(n, n)
