@@ -350,13 +350,3 @@ if ss.is_model_selection:
             ax.tick_params(axis='both', labelsize=12)
             fig.colorbar(c)
             st.pyplot(fig)
-           
-    else:
-        ss.is_model_selection = None
-        ss.df_data = None
-        ss.datas = None
-        ss.output = None
-        ss.shap_source = None
-        ss.shap_value = None
-        ss.feature_names = None
-        ss.feature_importances = None
