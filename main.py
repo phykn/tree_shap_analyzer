@@ -350,3 +350,6 @@ if ss.is_model_selection:
             ax.tick_params(axis='both', labelsize=12)
             fig.colorbar(c)
             st.pyplot(fig)
+           
+    else:
+        ss.is_model_selection = False
