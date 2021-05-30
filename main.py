@@ -79,9 +79,11 @@ df_data_columns = list(df_data.columns)
 
 # Select Mode
 mode = st.selectbox('Mode', ['Regression', 'Classification'])
+
+# Select Target
+targets = [st.selectbox('Target', df_data_columns)]
+    
 if mode == 'Classification':
-    # Select Target
-    targets = [st.selectbox('Target', df_data_columns)]
     _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
     _metric = ['AUC', 'LOGLOSS', 'ACCURACY']
     
@@ -109,8 +111,6 @@ if mode == 'Classification':
         st.info(f'Class 1 = {len(index_1[0])}')
 
 elif mode == 'Regression':
-    # Select Target
-    targets = [st.selectbox('Target', df_data_columns)]
     _model_list = ['lgb_reg', 'xgb_reg', 'rf_reg', 'et_reg']
     _metric = ['MAE', 'MSE', 'RMSE', 'R2']    
 else:
