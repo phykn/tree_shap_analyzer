@@ -12,7 +12,7 @@ from module.metrics import *
 from module.data_preparation import select_feature, split_data, del_outlier
 from module.model_selection import select_model
 from module.shap import get_feature_importance, get_shap_value_from_output, get_important_feature
-from module.simulation import simulator
+from module.simulation import simulator_1d, simulator_2d
 from module.helper import add_histogram
 import module.SessionState as SessionState
 import warnings
@@ -27,7 +27,7 @@ class CFG:
     n_splits = 4
     max_data_length = 100000
     max_shap_data_num = 500
-    num_simulation = 1000
+    num_simulation = 100
     outlier_process = True
     lower_limit=0.01
     upper_limit=0.99
@@ -90,6 +90,7 @@ if mode == 'Classification':
     # Convert Value
     values = df_data[targets[0]].dropna().values
     min_value, max_value = float(np.min(values)), float(np.max(values))
+
     cutoff = st.slider(
         'Cut Off',
         min_value=min_value, 
@@ -232,11 +233,11 @@ if ss.is_model_selection:
 
     # Analysis Type and Feature Selection
     st.markdown('### Model Analysis')
-    type_name = st.selectbox('Type', ['SHAP', 'Simulation'], index=0)
-    feature = st.selectbox('Feature', feature_names, index=0)
-    index = np.where(np.array(features)==feature)[0][0]
+    type_name = st.selectbox('Type', ['SHAP', 'Simulation (1D)', 'Simulation (2D)'], index=0)
 
-    if type_name == 'SHAP':        
+    if type_name == 'SHAP':     
+        feature = st.selectbox('Feature', feature_names, index=0)
+        index = np.where(np.array(features)==feature)[0][0]   
         x = shap_source[features[index]].values
         y = shap_value[:, index]
         fig, ax = plt.subplots()
@@ -249,17 +250,25 @@ if ss.is_model_selection:
         ax.tick_params(axis='both', labelsize=12)
         st.pyplot(fig)
 
-    elif type_name == 'Simulation':
+    elif type_name == 'Simulation (1D)':
+        layout_1, layout_2 = st.beta_columns(2)
+
+        with layout_1:
+            feature = st.selectbox('Feature', feature_names, index=0)
+        index = np.where(np.array(features)==feature)[0][0]  
         data = df_data[features[index]].dropna().values
         x_min, x_max = float(np.min(data)), float(np.max(data))
-        x_set_min, x_set_max = st.slider(
-            'Select a range of values',
-            min_value=x_min, 
-            max_value=x_max,
-            value=(x_min, x_max),
-            step=(x_max-x_min)/100
-        )
-        x, y = simulator(
+
+        with layout_2:
+            x_set_min, x_set_max = st.slider(
+                'Range',
+                min_value=x_min, 
+                max_value=x_max,
+                value=(x_min, x_max),
+                step=(x_max-x_min)/100
+            )        
+
+        x, y = simulator_1d(
             df_data, 
             models,
             features, 
@@ -278,4 +287,66 @@ if ss.is_model_selection:
         ax.set_xlabel(f'{feature}', fontsize=13)
         ax.set_ylabel(f'Pred. {targets[0]}', fontsize=13)
         ax.tick_params(axis='both', labelsize=12)
+        st.pyplot(fig)
+
+    elif type_name == 'Simulation (2D)':
+        layout_1, layout_2 = st.beta_columns(2)
+        layout_3, layout_4 = st.beta_columns(2)
+
+        with layout_1:
+            feature_1 = st.selectbox('Feature #1', feature_names, index=0)
+        index_1 = np.where(np.array(features)==feature_1)[0][0]  
+        data_1 = df_data[features[index_1]].dropna().values
+        x1_min, x1_max = float(np.min(data_1)), float(np.max(data_1))
+        with layout_2:
+            x1_set_min, x1_set_max = st.slider(
+                'Range #1',
+                min_value=x1_min, 
+                max_value=x1_max,
+                value=(x1_min, x1_max),
+                step=(x1_max-x1_min)/100
+            )     
+
+        with layout_3:
+            feature_2 = st.selectbox('Feature #2', feature_names, index=0)
+        index_2 = np.where(np.array(features)==feature_2)[0][0]  
+        data_2 = df_data[features[index_2]].dropna().values
+        x2_min, x2_max = float(np.min(data_2)), float(np.max(data_2))
+        with layout_4:
+            x2_set_min, x2_set_max = st.slider(
+                'Range #2',
+                min_value=x2_min, 
+                max_value=x2_max,
+                value=(x2_min, x2_max),
+                step=(x2_max-x2_min)/100
+            )      
+
+        x1, x2, y = simulator_2d(
+            df_data, 
+            models,
+            features, 
+            feature_1, 
+            x1_set_min, 
+            x1_set_max, 
+            feature_2, 
+            x2_set_min, 
+            x2_set_max, 
+            mode=mode,
+            n=CFG.num_simulation
+        )
+
+        fig, ax = plt.subplots()
+        ax.set_title(f'Target = {targets[0]}', fontsize=13)
+        c = ax.pcolormesh(
+            x1, x2, y, 
+            cmap='jet', 
+            vmin=np.min(y), 
+            vmax=np.max(y)
+        )
+        ax.set_xlim(x1_set_min, x1_set_max)
+        ax.set_ylim(x2_set_min, x2_set_max)
+        ax.set_xlabel(f'{feature_1}', fontsize=13)
+        ax.set_ylabel(f'{feature_2}', fontsize=13)
+        ax.tick_params(axis='both', labelsize=12)
+        fig.colorbar(c)
         st.pyplot(fig)
