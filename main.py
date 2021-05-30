@@ -130,7 +130,7 @@ features = list(np.array(features)[feature_index])
 if st.button(f'Calculate ({targets[0]})'):
     # 1st Training
     st.markdown('### Start Training')
-    st.markdown('')
+    st.text('')
     df_data = select_feature(df_data, features, targets)
     datas = split_data(df_data, features, targets, mode, n_splits=CFG.n_splits)
     output = select_model(model_list, datas, features, targets, metric=metric, n_jobs=CFG.n_jobs)
@@ -141,7 +141,7 @@ if st.button(f'Calculate ({targets[0]})'):
     if importance_cut_value < 100:
         features = get_important_feature(feature_names, feature_importances, cut=importance_cut_value)
         st.markdown(f'### Feature Selection: {len(feature_names)} > {len(features)}')
-        st.text(f'')
+        st.text('')
 
         df_data = select_feature(df_data, features, targets)
         datas = split_data(df_data, features, targets, mode, n_splits=CFG.n_splits)
@@ -182,15 +182,15 @@ if ss.is_model_selection:
     # Plot Training Result
     if mode == output['mode']:
         st.markdown('### Training Result')
-        st.markdown(f'Mode: {mode}')
-        st.markdown(f'Model: {model_name}')  
+        st.warning(f'Mode: {mode}')
+        st.warning(f'Model: {model_name}')  
 
         if mode == 'Regression': 
-            st.markdown(f'MAE: {mae_score(true, pred)}')
-            st.markdown(f'MSE: {mse_score(true, pred)}')
-            st.markdown(f'RMSE: {rmse_score(true, pred)}')
-            st.markdown(f'R2 Score: {r2_score(true, pred):.4f}')
-            st.markdown('')
+            st.warning(f'MAE: {mae_score(true, pred)}')
+            st.warning(f'MSE: {mse_score(true, pred)}')
+            st.warning(f'RMSE: {rmse_score(true, pred)}')
+            st.warning(f'R2 Score: {r2_score(true, pred):.4f}')
+            st.text('')
 
             minimum = np.minimum(np.min(true), np.min(pred))
             maximum = np.maximum(np.max(true), np.max(pred))
@@ -206,10 +206,10 @@ if ss.is_model_selection:
             st.pyplot(fig)
 
         elif mode == 'Classification':
-            st.markdown(f'AUC: {auc_score(true, pred)}')
-            st.markdown(f'LOGLOSS: {logloss_score(true, pred)}')
-            st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
-            st.markdown('')
+            st.warning(f'AUC: {auc_score(true, pred)}')
+            st.warning(f'LOGLOSS: {logloss_score(true, pred)}')
+            st.warning(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
+            st.text('')
 
         # Plot Feature Importance
         st.markdown('### Feature Importance')
