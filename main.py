@@ -80,16 +80,14 @@ df_data_columns = list(df_data.columns)
 # Select Mode
 mode = st.selectbox('Mode', ['Regression', 'Classification'])
 if mode == 'Classification':
-    # Model and Metric
+    # Select Target
+    targets = [st.selectbox('Target', df_data_columns)]
     _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
     _metric = ['AUC', 'LOGLOSS', 'ACCURACY']
-
+    
     # Convert Value
     values = df_data[targets[0]].dropna().values
     min_value, max_value = float(np.min(values)), float(np.max(values))
-
-    # Select Target
-    targets = [st.selectbox('Target', df_data_columns)]
     cutoff = st.slider(
         'Cut Off',
         min_value=min_value, 
