@@ -56,7 +56,12 @@ def load_data(file_path):
     return df
 
 # Get File path
-file_path = st.selectbox('File', glob('data/*.csv'), index=0)
+file_path = st.selectbox('Select a sample file', glob('data/*.csv'), index=0)
+
+# Upload File
+uploaded_file = st.file_uploader('or upload a CSV file', type=['csv'])
+if uploaded_file is not None:
+    file_path = uploaded_file
 
 # Load Data
 df_data = load_data(file_path)
