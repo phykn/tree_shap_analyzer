@@ -25,6 +25,7 @@ st.markdown('# Model Analyzer ver 0.7')
 class CFG:
     n_jobs = os.cpu_count()
     n_splits = 4
+    max_data_length = 100000
     max_shap_data_num = 500
     num_simulation = 1000
     outlier_process = True
@@ -45,10 +46,13 @@ ss = SessionState.get(
 
 # Load Data
 @st.cache()
-def load_data(file_path):
+def load_data(file_path, max_len=100000):
     # Load Data
     df = pd.read_csv(file_path)
-
+    
+    if len(df) > max_len:
+        df = df.sample(n=max_len, random_state=42)
+        
     # Select Column
     columns = df.columns
     columns = [column for column in columns if is_numeric_dtype(df[column])]
@@ -64,7 +68,7 @@ if uploaded_file is not None:
     file_path = uploaded_file
 
 # Load Data
-df_data = load_data(file_path)
+df_data = load_data(file_path, max_len=CFG.max_data_length)
 
 # Delete Outlier
 if CFG.outlier_process:
