@@ -101,7 +101,7 @@ if mode == 'Classification':
     values[index_0] = 0
     values[index_1] = 1
     df_data[targets[0]] = values
-    st.text(f'Class 0: {len(index_0[0])}, Class 1: {len(index_1[0])}')
+    st.info(f'Class 0: {len(index_0[0])}, Class 1: {len(index_1[0])}')
 
 elif mode == 'Regression':
     # Select Target
