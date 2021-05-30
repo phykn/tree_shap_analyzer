@@ -24,9 +24,11 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
 
             true = y_valid
             if '_reg' in model_name:
-                pred = m.predict(x_valid)
+                mode = 'Regression'
+                pred = m.predict(x_valid)                
             elif '_clf' in model_name:
-                pred = m.predict_proba(x_valid)[:, 1]            
+                mode = 'Classification'       
+                pred = m.predict_proba(x_valid)[:, 1] 
 
             oob_true += list(true)
             oob_pred += list(pred)
@@ -66,6 +68,7 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
     oob = oobs[index]
 
     output = {}
+    output['mode'] = mode
     output['fold'] = number
     output['model_name'] = model_name
     output['features'] = features

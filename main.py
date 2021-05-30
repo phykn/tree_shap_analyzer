@@ -181,172 +181,172 @@ if ss.is_model_selection:
     pred = output['oob_pred']
 
     # Plot Training Result
-    st.markdown('### Training Result')
-    st.markdown(f'Mode: {mode}')
-    st.markdown(f'Model: {model_name}')
+    if mode == output['mode']:
+        st.markdown('### Training Result')
+        st.markdown(f'Mode: {mode}')
+        st.markdown(f'Model: {model_name}')  
 
-    if mode == 'Regression':        
-        st.markdown(f'MAE: {mae_score(true, pred)}')
-        st.markdown(f'MSE: {mse_score(true, pred)}')
-        st.markdown(f'RMSE: {rmse_score(true, pred)}')
-        st.markdown(f'R2 Score: {r2_score(true, pred):.4f}')
-        st.markdown('')
+        if mode == 'Regression': 
+            st.markdown(f'MAE: {mae_score(true, pred)}')
+            st.markdown(f'MSE: {mse_score(true, pred)}')
+            st.markdown(f'RMSE: {rmse_score(true, pred)}')
+            st.markdown(f'R2 Score: {r2_score(true, pred):.4f}')
+            st.markdown('')
 
-        minimum = np.minimum(np.min(true), np.min(pred))
-        maximum = np.maximum(np.max(true), np.max(pred))
+            minimum = np.minimum(np.min(true), np.min(pred))
+            maximum = np.maximum(np.max(true), np.max(pred))
+            fig, ax = plt.subplots()
+            ax.set_title(f'Target = {targets[0]}', fontsize=13)
+            ax.scatter(true, pred, color='#EA4A54')
+            ax.plot([minimum, maximum], [minimum, maximum], ls='--', lw=2, color='k')
+            ax.set_xlim(minimum, maximum)
+            ax.set_ylim(minimum, maximum)
+            ax.set_xlabel('Ground Truth', fontsize=13)
+            ax.set_ylabel('Prediction', fontsize=13)
+            ax.tick_params(axis='both', labelsize=12)
+            st.pyplot(fig)
+
+        elif mode == 'Classification':
+            st.markdown(f'AUC: {auc_score(true, pred)}')
+            st.markdown(f'LOGLOSS: {logloss_score(true, pred)}')
+            st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
+            st.markdown('')
+
+        # Plot Feature Importance
+        st.markdown('### Feature Importance')
+        num_init = np.minimum(10, len(feature_names))
+        show_number = st.number_input(
+            'Feature Number',
+            value=num_init,
+            min_value=1,
+            max_value=len(feature_names),
+            step=1
+        )
         fig, ax = plt.subplots()
         ax.set_title(f'Target = {targets[0]}', fontsize=13)
-        ax.scatter(true, pred, color='#EA4A54')
-        ax.plot([minimum, maximum], [minimum, maximum], ls='--', lw=2, color='k')
-        ax.set_xlim(minimum, maximum)
-        ax.set_ylim(minimum, maximum)
-        ax.set_xlabel('Ground Truth', fontsize=13)
-        ax.set_ylabel('Prediction', fontsize=13)
+        ax.barh(feature_names[:show_number][::-1], feature_importances[:show_number][::-1], color='#EA4A54')
+        ax.set_xlim(left=0)
+        ax.set_ylim(-1, show_number)
+        ax.set_xlabel('Feature Importance (%)', fontsize=13)
         ax.tick_params(axis='both', labelsize=12)
         st.pyplot(fig)
 
-    elif mode == 'Classification':
-        st.markdown(f'AUC: {auc_score(true, pred)}')
-        st.markdown(f'LOGLOSS: {logloss_score(true, pred)}')
-        st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
-        st.markdown('')
+        # Analysis Type and Feature Selection
+        st.markdown('### Model Analysis')
+        type_name = st.selectbox('Type', ['SHAP', 'Simulation (1D)', 'Simulation (2D)'], index=0)
 
-    # Plot Feature Importance
-    st.markdown('### Feature Importance')
-
-    num_init = np.minimum(10, len(feature_names))
-    show_number = st.number_input(
-        'Feature Number',
-        value=num_init,
-        min_value=1,
-        max_value=len(feature_names),
-        step=1
-    )
-    fig, ax = plt.subplots()
-    ax.set_title(f'Target = {targets[0]}', fontsize=13)
-    ax.barh(feature_names[:show_number][::-1], feature_importances[:show_number][::-1], color='#EA4A54')
-    ax.set_xlim(left=0)
-    ax.set_ylim(-1, show_number)
-    ax.set_xlabel('Feature Importance (%)', fontsize=13)
-    ax.tick_params(axis='both', labelsize=12)
-    st.pyplot(fig)
-
-    # Analysis Type and Feature Selection
-    st.markdown('### Model Analysis')
-    type_name = st.selectbox('Type', ['SHAP', 'Simulation (1D)', 'Simulation (2D)'], index=0)
-
-    if type_name == 'SHAP':     
-        feature = st.selectbox('Feature', feature_names, index=0)
-        index = np.where(np.array(features)==feature)[0][0]   
-        x = shap_source[features[index]].values
-        y = shap_value[:, index]
-        fig, ax = plt.subplots()
-        ax.set_title(f'Target = {targets[0]}', fontsize=13)
-        ax.scatter(x, y, s=20, color='#EA4A54')        
-        ax, bottom = add_histogram(ax, x, y)
-        ax.set_ylim(bottom=bottom)
-        ax.set_xlabel(f'{feature}', fontsize=13)
-        ax.set_ylabel(f'SHAP Values for\n{feature}', fontsize=13)
-        ax.tick_params(axis='both', labelsize=12)
-        st.pyplot(fig)
-
-    elif type_name == 'Simulation (1D)':
-        layout_1, layout_2 = st.beta_columns(2)
-
-        with layout_1:
+        if type_name == 'SHAP':     
             feature = st.selectbox('Feature', feature_names, index=0)
-        index = np.where(np.array(features)==feature)[0][0]  
-        data = df_data[features[index]].dropna().values
-        x_min, x_max = float(np.min(data)), float(np.max(data))
+            index = np.where(np.array(features)==feature)[0][0]   
+            x = shap_source[features[index]].values
+            y = shap_value[:, index]
+            fig, ax = plt.subplots()
+            ax.set_title(f'Target = {targets[0]}', fontsize=13)
+            ax.scatter(x, y, s=20, color='#EA4A54')        
+            ax, bottom = add_histogram(ax, x, y)
+            ax.set_ylim(bottom=bottom)
+            ax.set_xlabel(f'{feature}', fontsize=13)
+            ax.set_ylabel(f'SHAP Values for\n{feature}', fontsize=13)
+            ax.tick_params(axis='both', labelsize=12)
+            st.pyplot(fig)
 
-        with layout_2:
-            x_set_min, x_set_max = st.slider(
-                'Range',
-                min_value=x_min, 
-                max_value=x_max,
-                value=(x_min, x_max),
-                step=(x_max-x_min)/100
-            )        
+        elif type_name == 'Simulation (1D)':
+            layout_1, layout_2 = st.beta_columns(2)
 
-        x, y = simulator_1d(
-            df_data, 
-            models,
-            features, 
-            feature, 
-            x_set_min, 
-            x_set_max, 
-            mode=mode,
-            n=CFG.num_simulation
-        )
-        fig, ax = plt.subplots()
-        ax.set_title(f'Target = {targets[0]}', fontsize=13)
-        ax.plot(x, y, color='#EA4A54')
-        ax, bottom = add_histogram(ax, data, y)
-        ax.set_xlim(x_set_min, x_set_max)
-        ax.set_ylim(bottom=bottom)
-        ax.set_xlabel(f'{feature}', fontsize=13)
-        ax.set_ylabel(f'Pred. {targets[0]}', fontsize=13)
-        ax.tick_params(axis='both', labelsize=12)
-        st.pyplot(fig)
+            with layout_1:
+                feature = st.selectbox('Feature', feature_names, index=0)
+            index = np.where(np.array(features)==feature)[0][0]  
+            data = df_data[features[index]].dropna().values
+            x_min, x_max = float(np.min(data)), float(np.max(data))
 
-    elif type_name == 'Simulation (2D)':
-        layout_1, layout_2 = st.beta_columns(2)
-        layout_3, layout_4 = st.beta_columns(2)
+            with layout_2:
+                x_set_min, x_set_max = st.slider(
+                    'Range',
+                    min_value=x_min, 
+                    max_value=x_max,
+                    value=(x_min, x_max),
+                    step=(x_max-x_min)/100
+                )        
 
-        with layout_1:
-            feature_1 = st.selectbox('Feature #1', feature_names, index=0)
-        index_1 = np.where(np.array(features)==feature_1)[0][0]  
-        data_1 = df_data[features[index_1]].dropna().values
-        x1_min, x1_max = float(np.min(data_1)), float(np.max(data_1))
-        with layout_2:
-            x1_set_min, x1_set_max = st.slider(
-                'Range #1',
-                min_value=x1_min, 
-                max_value=x1_max,
-                value=(x1_min, x1_max),
-                step=(x1_max-x1_min)/100
-            )     
+            x, y = simulator_1d(
+                df_data, 
+                models,
+                features, 
+                feature, 
+                x_set_min, 
+                x_set_max, 
+                mode=mode,
+                n=CFG.num_simulation
+            )
+            fig, ax = plt.subplots()
+            ax.set_title(f'Target = {targets[0]}', fontsize=13)
+            ax.plot(x, y, color='#EA4A54')
+            ax, bottom = add_histogram(ax, data, y)
+            ax.set_xlim(x_set_min, x_set_max)
+            ax.set_ylim(bottom=bottom)
+            ax.set_xlabel(f'{feature}', fontsize=13)
+            ax.set_ylabel(f'Pred. {targets[0]}', fontsize=13)
+            ax.tick_params(axis='both', labelsize=12)
+            st.pyplot(fig)
 
-        with layout_3:
-            feature_2 = st.selectbox('Feature #2', feature_names, index=0)
-        index_2 = np.where(np.array(features)==feature_2)[0][0]  
-        data_2 = df_data[features[index_2]].dropna().values
-        x2_min, x2_max = float(np.min(data_2)), float(np.max(data_2))
-        with layout_4:
-            x2_set_min, x2_set_max = st.slider(
-                'Range #2',
-                min_value=x2_min, 
-                max_value=x2_max,
-                value=(x2_min, x2_max),
-                step=(x2_max-x2_min)/100
-            )      
+        elif type_name == 'Simulation (2D)':
+            layout_1, layout_2 = st.beta_columns(2)
+            layout_3, layout_4 = st.beta_columns(2)
 
-        x1, x2, y = simulator_2d(
-            df_data, 
-            models,
-            features, 
-            feature_1, 
-            x1_set_min, 
-            x1_set_max, 
-            feature_2, 
-            x2_set_min, 
-            x2_set_max, 
-            mode=mode,
-            n=CFG.num_simulation
-        )
+            with layout_1:
+                feature_1 = st.selectbox('Feature #1', feature_names, index=0)
+            index_1 = np.where(np.array(features)==feature_1)[0][0]  
+            data_1 = df_data[features[index_1]].dropna().values
+            x1_min, x1_max = float(np.min(data_1)), float(np.max(data_1))
+            with layout_2:
+                x1_set_min, x1_set_max = st.slider(
+                    'Range #1',
+                    min_value=x1_min, 
+                    max_value=x1_max,
+                    value=(x1_min, x1_max),
+                    step=(x1_max-x1_min)/100
+                )     
 
-        fig, ax = plt.subplots()
-        ax.set_title(f'Target = {targets[0]}', fontsize=13)
-        c = ax.pcolormesh(
-            x1, x2, y, 
-            cmap='jet', 
-            vmin=np.min(y), 
-            vmax=np.max(y)
-        )
-        ax.set_xlim(x1_set_min, x1_set_max)
-        ax.set_ylim(x2_set_min, x2_set_max)
-        ax.set_xlabel(f'{feature_1}', fontsize=13)
-        ax.set_ylabel(f'{feature_2}', fontsize=13)
-        ax.tick_params(axis='both', labelsize=12)
-        fig.colorbar(c)
-        st.pyplot(fig)
+            with layout_3:
+                feature_2 = st.selectbox('Feature #2', feature_names, index=0)
+            index_2 = np.where(np.array(features)==feature_2)[0][0]  
+            data_2 = df_data[features[index_2]].dropna().values
+            x2_min, x2_max = float(np.min(data_2)), float(np.max(data_2))
+            with layout_4:
+                x2_set_min, x2_set_max = st.slider(
+                    'Range #2',
+                    min_value=x2_min, 
+                    max_value=x2_max,
+                    value=(x2_min, x2_max),
+                    step=(x2_max-x2_min)/100
+                )      
+
+            x1, x2, y = simulator_2d(
+                df_data, 
+                models,
+                features, 
+                feature_1, 
+                x1_set_min, 
+                x1_set_max, 
+                feature_2, 
+                x2_set_min, 
+                x2_set_max, 
+                mode=mode,
+                n=CFG.num_simulation
+            )
+
+            fig, ax = plt.subplots()
+            ax.set_title(f'Target = {targets[0]}', fontsize=13)
+            c = ax.pcolormesh(
+                x1, x2, y, 
+                cmap='jet', 
+                vmin=np.min(y), 
+                vmax=np.max(y)
+            )
+            ax.set_xlim(x1_set_min, x1_set_max)
+            ax.set_ylim(x2_set_min, x2_set_max)
+            ax.set_xlabel(f'{feature_1}', fontsize=13)
+            ax.set_ylabel(f'{feature_2}', fontsize=13)
+            ax.tick_params(axis='both', labelsize=12)
+            fig.colorbar(c)
+            st.pyplot(fig)
