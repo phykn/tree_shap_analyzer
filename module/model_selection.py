@@ -49,7 +49,7 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
                 s = -1 * accuracy_score(true, pred)
 
             # Log
-            st.markdown(f'{datetime.now()} | {model_name} | {i}/{number} | {metric} = {np.abs(s)}')
+            st.info(f'{datetime.now()} | {model_name} | {i}/{number} | {metric} = {np.abs(s)}')
 
             score += s / number
             i += 1
