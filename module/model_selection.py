@@ -59,8 +59,8 @@ def select_model(model_names, datas, features, targets, metric='MAE', n_jobs=-1)
         oobs.append([oob_true, oob_pred])
 
         # Log
-        st.markdown(f'{datetime.now()} | {model_name} | CV Score = {np.abs(score)}')
-        st.markdown('')
+        st.success(f'{datetime.now()} | {model_name} | CV Score = {np.abs(score)}')
+        st.text('')
 
     index = np.argmin(scores)
     model = models[index]
