@@ -132,7 +132,9 @@ feature_index = [st.sidebar.checkbox(f'{feature}', value=True) for feature in fe
 features = list(np.array(features)[feature_index])
 
 # Button
-if st.button(f'Calculate ({targets[0]})'):
+if st.button(f'RUN ({targets[0]})'):
+    print(f'RUN | {file_path} | {datetime.now()}')
+    
     # 1st Training
     st.markdown('### Start Training')
     st.text('')
