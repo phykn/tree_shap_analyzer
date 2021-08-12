@@ -8,5 +8,5 @@ streamlit run main.py --server.headless true --server.enableWebsocketCompression
 
 ### Sample Dataset
 The web app contains sample datasets. Please refer to the page below for the description.  
-[1] https://www.kaggle.com/prasadperera/the-boston-housing-dataset  
-[2] london_bike.csv, https://www.kaggle.com/hmavrodiev/london-bike-sharing-dataset  
+[1] https://www.kaggle.com/prasadperera/the-boston-housing-dataset (boston_housing.csv)  
+[2] https://www.kaggle.com/hmavrodiev/london-bike-sharing-dataset (london_bike.csv)  
