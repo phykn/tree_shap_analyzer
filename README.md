@@ -1,5 +1,5 @@
 ### Tree Model XAI
-This web application made with streamlit calculates feature importance and SHAP to explain the trained tree model. 
+This web application made with streamlit calculates feature importance and SHAP value to explain the trained tree model. 
 
 ### How To Run
 streamlit run main.py --server.headless true --server.enableWebsocketCompression false --browser.gatherUsageStats false --server.port 8501
