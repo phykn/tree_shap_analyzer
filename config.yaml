@@ -1,0 +1,17 @@
+BASE:
+  RANDOM_STATE        : 0
+  N_JOBS              : 12
+
+DATA:
+  MAX_DATA_NUMBER     : 100000
+  ADD_RANDOM_COLUMN   : True
+  DEL_OUTLIER         : True
+  OUTLIER_LOWER_LIMIT : 0.001  
+  OUTLIER_UPPER_LIMIT : 0.999
+
+TRAIN:
+  N_SPLITS            : 4
+
+GRAPH:
+  SHAP_DATA_NUMBER    : 1000   
+  SIMULATION_NUMBER   : 100
