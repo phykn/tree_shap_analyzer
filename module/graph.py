@@ -5,7 +5,6 @@ import seaborn as sns
 import altair as alt
 from sklearn.metrics import confusion_matrix
 from .helper import Smoothing
-from .simulation import simulator_1d
 
 def plot_training_result(true, pred, target_name):
     minimum = np.minimum(np.min(true), np.min(pred))
