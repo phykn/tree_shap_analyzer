@@ -97,7 +97,7 @@ def plot_shap(x, y, x_hist, feature_name, target_name, mean):
         x = alt.X('x:Q', scale=alt.Scale(domain=(np.min(x), np.max(x))), title=feature_name),
         y = alt.Y('y:Q', scale=alt.Scale(domain=(bottom, np.max(y))),    title=f'SHAP Value'),
         tooltip = [alt.Tooltip('x', title=feature_name),
-                   alt.Tooltip('y', title=target_name)]
+                   alt.Tooltip('y', title='SHAP Value')]
     )
 
     fig = fig_3 + fig_2 + fig_1
