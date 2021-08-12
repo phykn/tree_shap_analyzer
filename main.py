@@ -46,7 +46,7 @@ outlier_process = st.sidebar.checkbox('Delete Target Outlier', value=False)     
 backward_elimination = st.sidebar.checkbox('Backward Elimination', value=False) # Backward elimination
 
 # Get File path
-file_path = 'data/sample_data.csv'
+file_path = st.selectbox('File Selection', glob('data/*.csv'), index=0)
 
 # Load Data
 df_data = load_data(file_path, 
