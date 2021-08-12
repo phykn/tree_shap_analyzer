@@ -41,7 +41,7 @@ ss = SessionState.get(is_trained          = None,
 # Option
 st.sidebar.text('Option')
 outlier_process = st.sidebar.checkbox('Delete Target Outlier', value=False)     # Del outlier
-backward_elimination = st.sidebar.checkbox('Backward Elimination', value=False) # Backward elimination
+backward_elimination = st.sidebar.checkbox('Delete Non-Critical Features', value=False) # Backward elimination
 
 # Get File path
 file_path = st.selectbox('File Selection', glob('data/*.csv'), index=0)
