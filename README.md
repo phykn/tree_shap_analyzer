@@ -1,6 +1,6 @@
 ### Tree Model XAI
 This web application made with streamlit calculates feature importance and SHAP value to explain the trained tree model.
-Please access URL below to use the application.  
+Please access the URL to use the application.  
 URL: https://share.streamlit.io/phykn/model_analyzer/main/main.py  
 
 ### How To Run
