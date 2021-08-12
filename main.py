@@ -251,7 +251,7 @@ if ss.is_trained:
 
         num_init = np.minimum(10, len(feature_names))
         show_number = st.number_input(
-            '표시 개수',
+            'Number of features',
             value=num_init,
             min_value=1,
             max_value=len(feature_names),
