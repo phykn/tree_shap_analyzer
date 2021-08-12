@@ -85,7 +85,7 @@ df_data = del_outlier(df_data, targets,
 # Apply mode
 if mode == 'Classification':
     _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
-    _metric = ['ACCURACY', 'AUC', 'LOGLOSS']
+    _metric = ['AUC', 'LOGLOSS', 'ACCURACY']
     
     # Convert Value
     values = df_data[targets[0]].values
@@ -106,7 +106,7 @@ if mode == 'Classification':
 
 elif mode == 'Regression':
     _model_list = ['lgb_reg', 'xgb_reg', 'rf_reg', 'et_reg']
-    _metric = ['R2', 'MAE', 'MSE', 'RMSE']    
+    _metric = ['MAE', 'MSE', 'RMSE', 'R2']    
 else:
     raise ValueError
 
