@@ -20,11 +20,5 @@ def split_data(df, features, targets, mode, n_splits=5, shuffle=True, random_sta
         # Split Data
         df_train = df.iloc[train_index]
         df_valid = df.iloc[valid_index]
-
-        # Fill NaN
-        median = df_train.median()
-        df_train = df_train.fillna(median)
-        df_valid = df_valid.fillna(median) 
-
         data_sets.append([df_train, df_valid])
     return data_sets

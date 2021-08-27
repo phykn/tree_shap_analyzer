@@ -13,7 +13,7 @@ def get_df_filter(df, name_1='', name_2=''):
         selected_values = st.multiselect(name_2,
                                          options = values,
                                          default = values)
-        if len(selected_values) > 1:
+        if len(selected_values) > 0:
             df = pd.concat([df.loc[df[column]==value] for value in selected_values])
     return df
 

@@ -4,9 +4,9 @@ def simulator_1d(df, models, features, feature, mode='Regression', n=1000):
     x = df[feature].dropna().values    
     x = np.linspace(np.min(x), np.max(x), num=n)
 
-    median = df[features].median(axis=0).values
-    index  = np.where(np.array(features)==feature)[0][0]
-    data   = np.full([n, len(median)], median)
+    replace = df[features].mean(axis=0).values
+    index   = np.where(np.array(features)==feature)[0][0]
+    data    = np.full([n, len(replace)], replace)
     data[:, index] = x
     
     y = []
@@ -27,10 +27,10 @@ def simulator_2d(df, models, features, feature_1, feature_2, mode='Regression', 
     x1 = x1.flatten()
     x2 = x2.flatten()
 
-    median = df[features].median(axis=0).values  
-    index1 = np.where(np.array(features)==feature_1)[0][0]
-    index2 = np.where(np.array(features)==feature_2)[0][0]
-    data   = np.full([n**2, len(median)], median)       
+    replace = df[features].mean(axis=0).values  
+    index1  = np.where(np.array(features)==feature_1)[0][0]
+    index2  = np.where(np.array(features)==feature_2)[0][0]
+    data    = np.full([n**2, len(replace)], replace)       
     data[:, index1] = x1
     data[:, index2] = x2
     

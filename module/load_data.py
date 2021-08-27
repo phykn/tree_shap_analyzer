@@ -29,3 +29,14 @@ def del_outlier(df, features, lower_limit=0.01, upper_limit=0.99):
                                          values < upper_limits[column]))
         df_out = df_out.loc[index]
     return df_out
+
+def nan_process(df, nan_method='Delete'):
+    nan_methods = ['Delete', 'Mean', 'Median']
+    assert nan_method in nan_methods, f'nan_method not in {nan_methods}.'
+
+    if nan_method == 'Delete':
+        return df.dropna()
+    elif nan_method == 'Mean':
+        return df.fillna(df.mean())
+    elif nan_method == 'Median':
+        return df.fillna(df.median())

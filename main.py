@@ -1,4 +1,5 @@
 # Import Library
+import os
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -8,12 +9,13 @@ import warnings
 warnings.filterwarnings(action='ignore')
 from glob import glob
 from datetime import datetime
+from stqdm import stqdm
 from pandas.api.types import is_numeric_dtype
 
 # Import Module
 import module.SessionState as SessionState
 from module.metrics import *
-from module.load_data import load_data, del_outlier
+from module.load_data import load_data, del_outlier, nan_process
 from module.config import config_from_yaml
 from module.split_data import split_data
 from module.trainer import select_model
@@ -23,7 +25,7 @@ from module.helper import get_df_filter, get_table_download_link
 from module.graph import plot_training_result, plot_confusion_matrix, plot_feature_importance, plot_shap, plot_1d_simulation, plot_2d_simulation
 
 # Head
-st.markdown('# Tree Model XAI')
+st.markdown('# XAI for Tree Models ver 1.00')
 
 # Config
 CFG = config_from_yaml('config.yaml')
@@ -40,8 +42,9 @@ ss = SessionState.get(is_trained          = None,
 
 # Option
 st.sidebar.text('Option')
-outlier_process = st.sidebar.checkbox('Delete Target Outlier', value=False)     # Del outlier
+outlier_process = st.sidebar.checkbox('Delete Target Outlier', value=False)             # Del outlier
 backward_elimination = st.sidebar.checkbox('Delete Non-Critical Features', value=False) # Backward elimination
+f_normalize = st.sidebar.checkbox('Importance Normalization', value=False)              # Importance Normalization
 
 # Get File path
 file_path = st.selectbox('File Selection', glob('data/*.csv'), index=0)
@@ -116,12 +119,18 @@ model_list = st.sidebar.multiselect('Model', _model_list, default=_model_list)
 # Select Metric
 metric = st.sidebar.selectbox('Metric', _metric, index=0)
 
+# Select missing value handling method
+nan_method = st.sidebar.radio('Missing value handling', ['Delete', 'Mean', 'Median'])
+
 # Select Feature
 data_qualities = df_data.notnull().sum() / len(df_data)
 st.sidebar.text(f'Inputs (data quality | name)')
 features = [column for column in df_data_columns if column not in targets]
 index = [st.sidebar.checkbox(f'{data_qualities[column]:.2f} | {column}', value=True) for column in features]
 features = list(np.array(features)[index])
+
+# NaN Process
+df_data = nan_process(df_data[features+targets], nan_method=nan_method)
 
 # Button
 if st.button(f'Run ({targets[0]})'):
@@ -147,7 +156,7 @@ if st.button(f'Run ({targets[0]})'):
                                                          output,
                                                          max_num      = CFG.GRAPH.SHAP_DATA_NUMBER,
                                                          random_state = CFG.BASE.RANDOM_STATE)
-    feature_names, feature_importances = get_feature_importance(shap_value, sort=True)
+    feature_names, feature_importances = get_feature_importance(shap_value, sort=True, normalize=f_normalize)
 
     # Backward elimination
     if backward_elimination and ('random_noise' in feature_names):
@@ -174,7 +183,7 @@ if st.button(f'Run ({targets[0]})'):
                                                              output,
                                                              max_num      = CFG.GRAPH.SHAP_DATA_NUMBER,
                                                              random_state = CFG.BASE.RANDOM_STATE)
-        feature_names, feature_importances = get_feature_importance(shap_value, sort=True)
+        feature_names, feature_importances = get_feature_importance(shap_value, sort=True, normalize=f_normalize)
 
     # Save output to Session
     ss.is_trained          = True
@@ -249,18 +258,16 @@ if ss.is_trained:
         )
         st.markdown(href, unsafe_allow_html=True)
 
-        num_init = np.minimum(10, len(feature_names))
-        show_number = st.number_input(
-            'Number of features',
-            value=num_init,
-            min_value=1,
-            max_value=len(feature_names),
-            step=1
-        )
+        num_init = np.minimum(10, len(feature_names))        
+        show_number = st.number_input('Number',
+                                      value=num_init,
+                                      min_value=1,
+                                      max_value=len(feature_names),
+                                      step=1)
 
         # Graph: Feature Importance
         st.altair_chart(
-            plot_feature_importance(df_feature_importance, targets[0], num=show_number), 
+            plot_feature_importance(df_feature_importance, targets[0], num=show_number, normalize=f_normalize), 
             use_container_width=True
         )
 
@@ -316,10 +323,10 @@ if ss.is_trained:
                             use_container_width=True)
 
         elif type_name == '2D Simulation':
-            layout_1, layout_2 = st.beta_columns(2)
-            with layout_1:
+            sim_layout_1, sim_layout_2 = st.beta_columns(2)
+            with sim_layout_1:
                 feature_1 = st.selectbox('Feature #1', feature_names, index=0)
-            with layout_2:
+            with sim_layout_2:
                 feature_2 = st.selectbox('Feature #2', feature_names, index=1)
 
             x1, x2, y = simulator_2d(

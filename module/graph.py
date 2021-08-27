@@ -50,12 +50,12 @@ def plot_confusion_matrix(true, pred, target_name):
     sns.heatmap(df_cm, cmap='Blues', annot=True, annot_kws={'size': 16}, fmt='')
     return fig
 
-def plot_feature_importance(source, target_name, num=10):
+def plot_feature_importance(source, target_name, num=10, normalize=False):
     source = source.iloc[:num]
     base   = alt.Chart(source, title = f'Target = {target_name}')
 
     fig = base.mark_bar(color='#EA4A54').encode(
-        x = alt.X('importance:Q', title = 'Importance (%)'),
+        x = alt.X('importance:Q', title = 'Importance' if normalize else 'Importance (%)'),
         y = alt.Y('feature:N',    title = None, sort='-x'),
         tooltip = [alt.Tooltip('feature', title='Feature'),
                    alt.Tooltip('importance', title='Importance')]

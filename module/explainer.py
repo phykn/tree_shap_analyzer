@@ -43,12 +43,18 @@ def get_shap_value_from_output(datas, output, max_num=1000, random_state=42):
                                columns = features)
     return shap_source, shap_values
 
-def get_feature_importance(shap_values, sort=False):
+def get_feature_importance(shap_values, sort=False, normalize=False):
     feature_names = np.array(shap_values.columns)
     feature_importances = np.sum(np.abs(shap_values.values), axis=0)
-    feature_importances = 100 * feature_importances / np.sum(feature_importances)
     if sort:
         index = np.argsort(feature_importances)
         feature_names = feature_names[index]
-        feature_importances = feature_importances[index]        
+        feature_importances = feature_importances[index]   
+
+    if normalize:
+        feature_importances = len(feature_importances) * feature_importances / np.sum(feature_importances)    
+        if 'random_noise' in feature_names:
+            feature_importances /= feature_importances[np.where(feature_names == 'random_noise')]
+    else:
+        feature_importances = 100 * feature_importances / np.sum(feature_importances)
     return list(feature_names[::-1]), list(feature_importances[::-1])
