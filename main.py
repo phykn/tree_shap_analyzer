@@ -25,7 +25,7 @@ from module.helper import get_df_filter, get_table_download_link
 from module.graph import plot_training_result, plot_confusion_matrix, plot_feature_importance, plot_shap, plot_1d_simulation, plot_2d_simulation
 
 # Head
-st.markdown('# XAI for Tree Models ver 1.00')
+st.markdown('# XAI for Tree Models (ver 1.00)')
 
 # Config
 CFG = config_from_yaml('config.yaml')
