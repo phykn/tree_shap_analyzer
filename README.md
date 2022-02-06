@@ -1,7 +1,5 @@
 ### XAI for Tree Model
-This web application made with streamlit calculates feature importance and SHAP value to explain a trained tree model.
-Please access the URL to use the application.  
-https://share.streamlit.io/phykn/xai_tree/main/main.py
+This web application is powered by streamlit.
 
 ### How To Run
 streamlit run main.py --server.headless true --server.enableWebsocketCompression false --browser.gatherUsageStats false --server.port [port]
