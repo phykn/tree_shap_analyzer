@@ -3,6 +3,7 @@ import pandas as pd
 from pandas import DataFrame
 from typing import Optional
 
+
 def read_csv(
     path: str,
     max_len: Optional[int]=None,
