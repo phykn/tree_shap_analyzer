@@ -7,6 +7,7 @@ from numpy import ndarray
 from altair import Chart
 from sklearn.metrics import confusion_matrix
 
+
 def plot_reg_evaluation(
     true: ndarray, 
     pred: ndarray, 
@@ -83,6 +84,7 @@ def plot_reg_evaluation(
         titleFontSize = 20
     ).interactive()
     return fig
+
 
 def plot_confusion_matrix(
     true: ndarray, 
