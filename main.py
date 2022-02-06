@@ -90,6 +90,7 @@ with col_1:
             label = 'Train Data', 
             options = glob(f"{st.session_state['config']['file']['root']}/*.csv")
         )
+    train_file_path = 'data/titanic_train.csv' if train_file_path is None else train_file_path
     state_0['train_file_path'] = train_file_path
 
 with col_2:
@@ -103,6 +104,7 @@ with col_2:
             label = 'Test Data', 
             options = glob(f"{st.session_state['config']['file']['root']}/*.csv")
         )
+    test_file_path = 'data/titanic_test.csv' if test_file_path is None else test_file_path
     st.session_state['test_file_path'] = test_file_path
 
 ## update _df_0
