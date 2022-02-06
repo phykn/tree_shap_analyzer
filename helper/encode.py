@@ -2,12 +2,14 @@ import numpy as np
 from pandas import DataFrame
 from typing import Dict
 
+
 def apply_table(x, table):
     if x in table:
         return table[x]
     else:
         return np.random.choice(range(len(table)), size=1)[0]
 
+    
 def encode(
      df: DataFrame,
      encoder: Dict[str, Dict[str, int]]
