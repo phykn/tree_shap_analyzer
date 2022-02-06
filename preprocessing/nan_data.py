@@ -2,11 +2,13 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+
 def delete_nan(
     df: DataFrame
 ) -> DataFrame:
     '''Delete NaN Data'''
     return df.dropna()
+
 
 def apply_replace(x, values, p):
     if pd.isna(x):
@@ -14,6 +16,7 @@ def apply_replace(x, values, p):
     else:
         return x
 
+    
 def replace_nan(
     df: DataFrame,
     random_state: int=42
