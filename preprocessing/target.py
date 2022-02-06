@@ -2,12 +2,14 @@ import numpy as np
 from pandas import DataFrame
 from typing import Optional
 
+
 def apply_target(
     df: DataFrame,
     target: str
 ) -> None:
     '''Delete non-valid target data'''
     return df.loc[df[target].dropna().index]
+
 
 def apply_numeric(
     x: float, 
@@ -21,6 +23,7 @@ def apply_numeric(
     else:
         return None
 
+    
 def target_encode_numeric(
     df: DataFrame,
     target: str,
@@ -35,6 +38,7 @@ def target_encode_numeric(
     df = apply_target(df, target)    
     return df
 
+
 def apply_category(
     x: float, 
     label_0: str, 
@@ -47,6 +51,7 @@ def apply_category(
     else:
         return None
 
+    
 def target_encode_category(
     df: DataFrame,
     target: str,
