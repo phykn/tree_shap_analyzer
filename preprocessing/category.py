@@ -3,6 +3,7 @@ from pandas import DataFrame
 from pandas.api.types import is_numeric_dtype
 from typing import Tuple, Dict
 
+
 def encode_category(
     df: DataFrame
 ) -> Tuple[DataFrame, Dict[str, int]]:
