@@ -1,353 +1,787 @@
-# Import Library
 import os
 import numpy as np
-import pandas as pd
 import streamlit as st
-import matplotlib.pyplot as plt
-import gc
+import time
 import warnings
-warnings.filterwarnings(action='ignore')
 from glob import glob
-from datetime import datetime
-from stqdm import stqdm
+from omegaconf import OmegaConf
 from pandas.api.types import is_numeric_dtype
+from streamlit_autorefresh import st_autorefresh
+from dataloader import read_csv, clear_data
+from preprocessing.filter import apply_filter
+from preprocessing.target import apply_target, target_encode_numeric, target_encode_category
+from preprocessing import delete_nan, replace_nan, delete_outlier, encode_category
+from model import split_data, get_best_model
+from analysis import get_shap_value, get_importance, simulation_1d, simulation_2d
+from graph.evaluation import plot_reg_evaluation, plot_confusion_matrix
+from graph.importance import plot_importance
+from graph.explanation import plot_shap, plot_simulation_1d, plot_simulation_2d
+from helper import get_session_id, encode
+warnings.filterwarnings('ignore')
 
-# Import Module
-import module.SessionState as SessionState
-from module.metrics import *
-from module.load_data import load_data, del_outlier, nan_process
-from module.config import config_from_yaml
-from module.split_data import split_data
-from module.trainer import select_model
-from module.explainer import get_shap_value_from_output, get_feature_importance 
-from module.simulation import simulator_1d, simulator_2d
-from module.helper import get_df_filter, get_table_download_link
-from module.graph import plot_training_result, plot_confusion_matrix, plot_feature_importance, plot_shap, plot_1d_simulation, plot_2d_simulation
-
-# Head
-st.markdown('# XAI for Tree Models (ver 1.00)')
-
-# Config
-CFG = config_from_yaml('config.yaml')
 
 # Create Session
-ss = SessionState.get(is_trained          = None,
-                      df_data             = None,
-                      datas               = None,
-                      output              = None,     
-                      shap_source         = None,
-                      shap_value          = None,
-                      feature_names       = None,
-                      feature_importances = None)
+if 'config' not in st.session_state:
+    st.session_state['config'] = OmegaConf.load('config.yaml')
 
-# Option
-st.sidebar.text('Option')
-outlier_process = st.sidebar.checkbox('Delete Target Outlier', value=False)             # Del outlier
-backward_elimination = st.sidebar.checkbox('Delete Non-Critical Features', value=False) # Backward elimination
-f_normalize = st.sidebar.checkbox('Importance Normalization', value=False)              # Importance Normalization
+if 'train_file_path' not in st.session_state:
+    st.session_state['train_file_path'] = None
+if 'test_file_path' not in st.session_state:
+    st.session_state['test_file_path'] = None
+if 'filter' not in st.session_state:
+    st.session_state['filter'] = None
+if 'encoder' not in st.session_state:
+    st.session_state['encoder'] = None
+if 'target' not in st.session_state:
+    st.session_state['target'] = None
+if 'feature_all' not in st.session_state:
+    st.session_state['feature_all'] = None
+if 'feature_selected' not in st.session_state:
+    st.session_state['feature_selected'] = None
+if 'data_quality' not in st.session_state:
+    st.session_state['data_quality'] = None
+if 'mode' not in st.session_state:
+    st.session_state['mode'] = None
+if 'model' not in st.session_state:
+    st.session_state['model'] = None
 
-# Get File path
-file_path = st.selectbox('File Selection', glob('data/*.csv'), index=0)
+if 'state_0' not in st.session_state:
+    st.session_state['state_0'] = None
+if '_df_0' not in st.session_state:
+    st.session_state['_df_0'] = None
+if 'state_1' not in st.session_state:
+    st.session_state['state_1'] = None
+if '_df_1' not in st.session_state:
+    st.session_state['_df_1'] = None
+if 'state_2' not in st.session_state:
+    st.session_state['state_2'] = None
+if '_df_2' not in st.session_state:
+    st.session_state['_df_2'] = None
+if 'state_3' not in st.session_state:
+    st.session_state['state_3'] = None
+if '_df_3' not in st.session_state:
+    st.session_state['_df_3'] = None
 
-# Load Data
-df_data = load_data(file_path, 
-                    max_len           = CFG.DATA.MAX_DATA_NUMBER, 
-                    random_state      = CFG.BASE.RANDOM_STATE, 
-                    add_random_column = CFG.DATA.ADD_RANDOM_COLUMN)
 
-# Get Column
-df_data_columns = list(df_data.columns)
+# Title
+st.markdown('# XAI for Tree Models')
+st.write(f'SESSION ID: {get_session_id()}')
 
-# Filtering
-filter_num = st.sidebar.number_input('Filter', 
-                                     value     = 0, 
-                                     min_value = 0,
-                                     max_value = len(df_data_columns), 
-                                     step      = 1)
-if filter_num > 0:
-    for i in range(filter_num):
-        df_data = get_df_filter(df_data, 
-                                name_1 = f'Filtered column #{i+1}', 
-                                name_2 = f'Filtered value #{i+1}')
+# STEP 1.
+st.markdown('### STEP 1. Data Prepration')
 
-# Select Mode
-mode = st.selectbox('Mode', ['Regression', 'Classification'])
+# Start Time
+start_time = time.time()
 
-# Select Target
-targets = [st.selectbox('Target', df_data_columns)]
+# State 0: _df_0
+state_0 = {}
 
-# Drop NaN Target
-index   = df_data[targets[0]].dropna().index
-df_data = df_data.loc[index].reset_index(drop=True)
+## Select Train, Test Data
+col_1, col_2 = st.columns(2)
 
-# Del Outlier
-df_data = del_outlier(df_data, targets,
-                      lower_limit = CFG.DATA.OUTLIER_LOWER_LIMIT, 
-                      upper_limit = CFG.DATA.OUTLIER_UPPER_LIMIT) if outlier_process else df_data
+with col_1:
+    if st.session_state['config']['file']['online']:
+        train_file_path = st.file_uploader(
+            label = 'Train Data', 
+            type = 'csv', 
+        )
+    else:
+        train_file_path = st.selectbox(
+            label = 'Train Data', 
+            options = glob(f"{st.session_state['config']['file']['root']}/*.csv")
+        )
+    state_0['train_file_path'] = train_file_path
 
-# Apply mode
-if mode == 'Classification':
-    _model_list = ['lgb_clf', 'xgb_clf', 'rf_clf', 'et_clf']
-    _metric = ['AUC', 'LOGLOSS', 'ACCURACY']
+with col_2:
+    if st.session_state['config']['file']['online']:
+        test_file_path = st.file_uploader(
+            label = 'Test Data', 
+            type = 'csv', 
+        )
+    else:
+        test_file_path = st.selectbox(
+            label = 'Test Data', 
+            options = glob(f"{st.session_state['config']['file']['root']}/*.csv")
+        )
+    st.session_state['test_file_path'] = test_file_path
+
+## update _df_0
+if (
+    state_0 != st.session_state['state_0']
+):
+    df = read_csv(
+        path = state_0['train_file_path'],
+        max_len = st.session_state['config']['data']['max_len'],
+        add_random_noise = st.session_state['config']['data']['add_random_noise'],
+        random_state = st.session_state['config']['setup']['random_state'],
+    )
+    df = clear_data(df)
+
+    # Update session state
+    st.session_state['train_file_path'] = state_0['train_file_path']
+    st.session_state['_df_0'] = df
+    st.session_state['model'] = None
+
+
+# Print Options
+st.sidebar.write('Options')
+
+# State 1: _df_1
+state_1 = {}
+
+## Get Filter Number
+num_filter = st.sidebar.number_input(
+    label = 'Filter Number',
+    value = 0, 
+    min_value = 0,
+    max_value = len(st.session_state['_df_0'].columns), 
+    step=1
+)
+
+## Get Filter Value
+filter = {}
+if num_filter > 0:
+    for i in range(num_filter):
+        column = st.selectbox(
+            label = f'Filtered column #{i+1}', 
+            options = [None]+list(st.session_state['_df_0'].columns),
+        )
+        if column is not None:
+            values = list(
+                np.sort(st.session_state['_df_0'][column].dropna().unique())
+            )
+            selected_values = st.multiselect(
+                label = f'Select values #{i+1}',
+                options = values, 
+                default = values
+            )
+            filter[column] = selected_values
+state_1['filter'] = filter
+
+## Get Mode
+mode = st.selectbox(
+    label = 'Mode', 
+    options = ['Regression', 'Binary Classification']
+)
+state_1['mode'] = mode
+
+## Get Target
+target = st.selectbox(
+    label = 'Target', 
+    options = list(st.session_state['_df_0'].columns)
+)
+state_1['target'] = target
+
+## Target Encoding
+if mode == 'Binary Classification':
+    values = st.session_state['_df_0'][target].dropna()
+    if is_numeric_dtype(values):
+        column_c0, column_i0, column_c1, column_i1 = st.columns(4)
+
+        with column_c0:
+            l_q = st.number_input(
+                label = 'Label 0 Upper Limit (%)', 
+                value = 20, 
+                min_value = 0, 
+                max_value = 100, 
+                step = 1
+            )
+            state_1['l_q'] = l_q
+
+        with column_c1:
+            h_q = st.number_input(
+                label = 'Label 1 Lower Limit (%)', 
+                value = 80, 
+                min_value = 0, 
+                max_value = 100, 
+                step = 1
+            )
+            state_1['h_q'] = h_q
+
+        with column_i0:
+            st.metric(
+                label = 'Label 0 Maximum', 
+                value = f"{np.percentile(values, q=l_q):.4f}"
+            )
+
+        with column_i1:
+            st.metric(
+                label = 'Label 1 Minimum', 
+                value = f"{np.percentile(values, q=h_q):.4f}"
+            )
+
+    else:
+        uniques = list(np.sort(np.unique(values)))
+        col_0, col_1 = st.columns(2)
+
+        with col_0:
+            label_0 = st.selectbox(
+                label = 'Label 0', 
+                options = uniques,
+                index = 0
+            )
+            state_1['label_0'] = label_0
+
+        with col_1:
+            label_1 = st.selectbox(
+                label = 'Label 1', 
+                options = [column for column in uniques if column != label_0],
+                index = 0
+            )
+            state_1['label_1'] = label_1
+
+## update _df_1
+if (
+    state_0 != st.session_state['state_0'] or 
+    state_1 != st.session_state['state_1']
+):
+    # Get DF
+    df = st.session_state['_df_0'].copy()
     
-    # Convert Value
-    values = df_data[targets[0]].values
-    min_value, max_value = float(np.min(values)), float(np.max(values))
-    cutoff = st.slider('Cut Off',
-                       min_value = min_value, 
-                       max_value = max_value,
-                       value     = (max_value+min_value)/2,
-                       step      = (max_value-min_value)/100)
-    values = np.where(values > cutoff, 1, 0)
-    df_data[targets[0]] = values
-    
-    class0, class1 = st.beta_columns(2)
-    with class0:
-        st.info(f'Class 0 = {len(values) - np.sum(values)}')
-    with class1:
-        st.info(f'Class 1 = {np.sum(values)}')
+    # Apply Filter
+    df = apply_filter(
+        df = df,
+        filter = filter
+    )
 
-elif mode == 'Regression':
-    _model_list = ['lgb_reg', 'xgb_reg', 'rf_reg', 'et_reg']
-    _metric = ['MAE', 'MSE', 'RMSE', 'R2']    
+    # Apply Target
+    df = apply_target(
+        df = df,
+        target = target
+    )
+
+    # Encode target if the mode is binary classification
+    if state_1['mode'] == 'Binary Classification':
+        if ('l_q' in state_1) and ('h_q' in state_1):
+            df = target_encode_numeric(
+                df = df,
+                target = state_1['target'],
+                l_q = state_1['l_q'],
+                h_q = state_1['h_q']
+            )
+        elif ('label_0' in state_1) and ('label_1' in state_1):
+            df = target_encode_category(
+                df = df,
+                target = state_1['target'],
+                label_0 = state_1['label_0'],
+                label_1 = state_1['label_1']
+            )
+
+    # Update session state    
+    st.session_state['filter'] = state_1['filter']
+    st.session_state['target'] = state_1['target']
+    st.session_state['feature_all'] = [column for column in df.columns if column != state_1['target']]
+    st.session_state['data_quality'] = df.notnull().sum() / len(df)
+    st.session_state['mode'] = state_1['mode']
+    if ('l_q' in state_1) and ('h_q' in state_1):
+        st.session_state['l_q'] = state_1['l_q']
+        st.session_state['h_q'] = state_1['h_q']
+        st.session_state['label_0'] = None
+        st.session_state['label_1'] = None
+    elif ('label_0' in state_1) and ('label_1' in state_1):
+        st.session_state['l_q'] = None
+        st.session_state['h_q'] = None
+        st.session_state['label_0'] = state_1['label_0']
+        st.session_state['label_1'] = state_1['label_1']
+    else:
+        st.session_state['l_q'] = None
+        st.session_state['h_q'] = None
+        st.session_state['label_0'] = None
+        st.session_state['label_1'] = None
+    st.session_state['_df_1'] = df
+    st.session_state['model'] = None
+
+
+# State 2: _df_2
+state_2 = {}
+
+## NaN Data
+nan_data = st.sidebar.selectbox(
+    label = 'NaN Data',
+    options = ['Delete', 'Replace']
+)
+state_2['nan_data'] = nan_data
+
+## Outlier
+del_outlier = st.sidebar.selectbox(
+    label = 'Delete Outlier', 
+    options = [False, True]
+)
+state_2['del_outlier'] = del_outlier
+
+## Auto Feature Selection
+auto_feature_selection = st.sidebar.selectbox(
+    label = 'Auto Feature Selection',
+    options = [False, True]
+)
+state_2['auto_feature_selection'] = auto_feature_selection
+
+## update _df_2
+if (
+    state_0 != st.session_state['state_0'] or 
+    state_1 != st.session_state['state_1'] or
+    state_2 != st.session_state['state_2']
+):
+    # Get DF
+    df = st.session_state['_df_1'].copy()
+
+    # NaN Data
+    if state_2['nan_data'] == 'Delete':
+        df = delete_nan(df)
+    elif state_2['nan_data'] == 'Replace':
+        df = replace_nan(
+            df = df, 
+            random_state = st.session_state['config']['setup']['random_state']
+        )
+
+    # Delete Outlier
+    if state_2['del_outlier']:
+        df = delete_outlier(df)
+
+    df, encoder = encode_category(df)
+
+    # Update session state    
+    st.session_state['nan_data'] = state_2['nan_data']
+    st.session_state['del_outlier'] = state_2['del_outlier']
+    st.session_state['auto_feature_selection'] = auto_feature_selection
+    st.session_state['encoder'] = encoder
+    st.session_state['_df_2'] = df.reset_index(drop=True)
+    st.session_state['model'] = None
+
+# State 3: _df_3
+state_3 = {}
+
+## Select Features
+st.sidebar.markdown("""---""")
+st.sidebar.write('Features')
+st.sidebar.text(f'Data quality | name')
+index = [
+    st.sidebar.checkbox(
+        label = f"{st.session_state['data_quality'][column]:.2f} | {column}",
+        key = f"_{column}",
+        value = True, 
+    ) for column in st.session_state['feature_all']
+]
+feature_selected = list(np.array(st.session_state['feature_all'])[index])
+state_3['feature_selected'] = feature_selected
+
+### Magage Features
+def uncheck():
+    for column in st.session_state['feature_all']:
+        st.session_state[f'_{column}'] = False
+def check():
+    for column in st.session_state['feature_all']:
+        st.session_state[f'_{column}'] = True
+        
+_, col_1, col_2 = st.sidebar.columns([1, 4, 5])
+with col_1:
+    st.button(
+        label = 'Check All', 
+        on_click = check
+    )  
+with col_2:
+    st.button(
+        label = 'Uncheck All', 
+        on_click = uncheck
+    )
+
+## update _df_3
+if (
+    state_0 != st.session_state['state_0'] or 
+    state_1 != st.session_state['state_1'] or
+    state_2 != st.session_state['state_2'] or
+    state_3 != st.session_state['state_3']
+):
+    # Get DF
+    df = st.session_state['_df_2'].copy()
+
+    # Select columns
+    columns = state_3['feature_selected'] + [st.session_state['target']]
+    df = df[columns]
+
+    # Update session state    
+    st.session_state['feature_selected'] = state_3['feature_selected']
+    st.session_state['_df_3'] = df
+    st.session_state['model'] = None
+
+
+# Update states
+st.session_state['state_0'] = state_0
+st.session_state['state_1'] = state_1
+st.session_state['state_2'] = state_2
+st.session_state['state_3'] = state_3
+
+# Data wall time
+wall_time = time.time() - start_time
+
+# Print Information
+st.sidebar.markdown("""---""")
+st.sidebar.write(f"Wall time: {wall_time:.4f} sec")
+st.sidebar.write(f"Data Num: {len(st.session_state['_df_3'])}")
+st.sidebar.write(f"Target: {st.session_state['target']}")
+st.sidebar.write(f"Feature Num: {len(feature_selected)}")
+
+# Print Encoder
+columns = st.session_state['feature_selected'] + [st.session_state['target']]
+encoder = {}
+if len(st.session_state['encoder']) > 0:    
+    for column in columns:
+        if column in st.session_state['encoder']:
+            encoder[column] = st.session_state['encoder'][column]
+
+if len(encoder) > 0:
+    st.sidebar.write('Encoded Features')
+    st.sidebar.write(encoder)
+
+# Print DF
+st.write('Sample Data (5)')
+st.write(st.session_state['_df_3'].iloc[:5])
+
+
+# Train Model
+if st.session_state['model'] is None:
+    st.markdown("""---""")
+    if st.button('Train Model'):
+        # Load Data
+        df = st.session_state['_df_3'].copy()
+        features = st.session_state['feature_selected']
+        target = st.session_state['target']
+        if st.session_state['mode'] == 'Regression':
+            mode = 'reg'
+        elif st.session_state['mode'] == 'Binary Classification':
+            mode = 'clf'
+
+        # Dataset
+        datasets = split_data(
+            df = df,
+            features = features,
+            target = target,
+            mode = mode,
+            n_splits = st.session_state['config']['split']['n_splits'],
+            shuffle = True,
+            random_state = st.session_state['config']['setup']['random_state']
+        )
+
+        # Best Model
+        best_model, history = get_best_model(
+            datasets = datasets, 
+            mode = mode,
+            random_state = st.session_state['config']['setup']['random_state'],
+            n_jobs = st.session_state['config']['setup']['n_jobs']
+        )
+        best_model['features'] = features
+        best_model['target'] = target
+        best_model['datasets'] = datasets
+
+        # SHAP
+        source, shap_value = get_shap_value(
+            config = best_model,
+            max_num = st.session_state['config']['shap']['max_num']
+        )
+        output = get_importance(
+            shap_value,
+            sort = st.session_state['config']['importance']['sort'],
+            normalize = st.session_state['config']['importance']['normalize']
+        )
+
+        shap = {}
+        shap['features'] = output['features']
+        shap['importance'] = output['importance']
+        shap['source'] = source
+        shap['shap_value'] = shap_value
+
+        if (
+            st.session_state['auto_feature_selection'] and
+            'random_noise' in shap['features']
+        ):
+            features = shap['features']
+            index = np.where(np.array(features)=='random_noise')[0][0]
+            if index != 0:
+                # Print Info
+                st.write('Auto Feature Selection is ON.')
+
+                # Set new features
+                features = features[:index]
+
+                # Dataset
+                datasets = split_data(
+                    df = df,
+                    features = features,
+                    target = target,
+                    mode = mode,
+                    n_splits = st.session_state['config']['split']['n_splits'],
+                    shuffle = True,
+                    random_state = st.session_state['config']['setup']['random_state']
+                )
+
+                # Best Model
+                best_model, history = get_best_model(
+                    datasets = datasets, 
+                    mode = mode,
+                    random_state = st.session_state['config']['setup']['random_state'],
+                    n_jobs = st.session_state['config']['setup']['n_jobs']
+                )
+                best_model['features'] = features
+                best_model['target'] = target
+                best_model['datasets'] = datasets
+
+                # SHAP
+                source, shap_value = get_shap_value(
+                    config = best_model,
+                    max_num = st.session_state['config']['shap']['max_num']
+                )
+                output = get_importance(
+                    shap_value,
+                    sort = st.session_state['config']['importance']['sort'],
+                    normalize = st.session_state['config']['importance']['normalize']
+                )
+
+                shap = {}
+                shap['features'] = output['features']
+                shap['importance'] = output['importance']
+                shap['source'] = source
+                shap['shap_value'] = shap_value 
+
+
+        # Update session state
+        st.session_state['history'] = history
+        st.session_state['model'] = best_model
+        st.session_state['shap'] = shap
+
+        # Refresh page
+        st_autorefresh(interval=100, limit=2)
+
+# Result
 else:
-    raise ValueError
+    # STEP 2. Evaluation
+    st.markdown('### STEP 2. Model Evaluation')
 
-# Select Models
-model_list = st.sidebar.multiselect('Model', _model_list, default=_model_list)
+    # Print Best Model
+    best = {}
+    best['name'] = st.session_state['model']['name']
+    best.update(st.session_state['model']['score'])
+    st.write('Best Model')
+    st.write(best)
 
-# Select Metric
-metric = st.sidebar.selectbox('Metric', _metric, index=0)
+    # Print Score
+    st.write(st.session_state['history'])
 
-# Select missing value handling method
-nan_method = st.sidebar.radio('Missing value handling', ['Delete', 'Mean', 'Median'])
-
-# Select Feature
-data_qualities = df_data.notnull().sum() / len(df_data)
-st.sidebar.text(f'Inputs (data quality | name)')
-features = [column for column in df_data_columns if column not in targets]
-index = [st.sidebar.checkbox(f'{data_qualities[column]:.2f} | {column}', value=True) for column in features]
-features = list(np.array(features)[index])
-
-# NaN Process
-df_data = nan_process(df_data[features+targets], nan_method=nan_method)
-
-# Button
-if st.button(f'Run ({targets[0]})'):
-    print(f'RUN | {file_path} | {datetime.now()}')
-    
-    # Training
-    st.markdown(f'### Training: {len(features)} features')
-    datas = split_data(df_data, 
-                       features, 
-                       targets, 
-                       mode, 
-                       n_splits     = CFG.TRAIN.N_SPLITS, 
-                       shuffle      = True, 
-                       random_state = CFG.BASE.RANDOM_STATE)
-    output = select_model(model_list, 
-                          datas, 
-                          features, 
-                          targets, 
-                          metric       = metric, 
-                          random_state = CFG.BASE.RANDOM_STATE, 
-                          n_jobs       = CFG.BASE.N_JOBS)
-    shap_source, shap_value = get_shap_value_from_output(datas, 
-                                                         output,
-                                                         max_num      = CFG.GRAPH.SHAP_DATA_NUMBER,
-                                                         random_state = CFG.BASE.RANDOM_STATE)
-    feature_names, feature_importances = get_feature_importance(shap_value, sort=True, normalize=f_normalize)
-
-    # Backward elimination
-    if backward_elimination and ('random_noise' in feature_names):
-        index = np.where(np.array(feature_names)=='random_noise')[0][0]
-        features = feature_names[:index+1]
-        st.markdown(f'### Backward Elimination: {len(features)} features')
-        st.text('')
-
-        datas = split_data(df_data, 
-                           features, 
-                           targets, 
-                           mode, 
-                           n_splits     = CFG.TRAIN.N_SPLITS, 
-                           shuffle      = True, 
-                           random_state = CFG.BASE.RANDOM_STATE)
-        output = select_model(model_list, 
-                              datas, 
-                              features, 
-                              targets, 
-                              metric       = metric, 
-                              random_state = CFG.BASE.RANDOM_STATE, 
-                              n_jobs       = CFG.BASE.N_JOBS)
-        shap_source, shap_value = get_shap_value_from_output(datas, 
-                                                             output,
-                                                             max_num      = CFG.GRAPH.SHAP_DATA_NUMBER,
-                                                             random_state = CFG.BASE.RANDOM_STATE)
-        feature_names, feature_importances = get_feature_importance(shap_value, sort=True, normalize=f_normalize)
-
-    # Save output to Session
-    ss.is_trained          = True
-    ss.df_data             = df_data
-    ss.datas               = datas  
-    ss.output              = output      
-    ss.shap_source         = shap_source
-    ss.shap_value          = shap_value
-    ss.feature_names       = feature_names
-    ss.feature_importances = feature_importances
-    gc.collect()
-
-if ss.is_trained:
-    # Load Data
-    df_data             = ss.df_data
-    datas               = ss.datas  
-    output              = ss.output      
-    shap_source         = ss.shap_source
-    shap_value          = ss.shap_value
-    feature_names       = ss.feature_names
-    feature_importances = ss.feature_importances
-
-    # Load Train output
-    number     = output['fold']
-    model_name = output['model_name']
-    features   = output['features']
-    targets    = output['targets']
-    models     = output['models']
-    true       = output['oob_true']
-    pred       = output['oob_pred']
-
-    # Plot Training Result
-    if mode == output['mode']:
-        st.markdown('### Result')     
-
-        # Result
-        st.markdown(f'Data Number: {len(true)}')
-        st.markdown(f'Mode: {mode}')
-        st.markdown(f'Model: {model_name}')  
-        if mode == 'Regression': 
-            st.markdown(f'MAE: {mae_score(true, pred)}')
-            st.markdown(f'MSE: {mse_score(true, pred)}')
-            st.markdown(f'RMSE: {rmse_score(true, pred)}')
-            st.markdown(f'R2 Score: {r2_score(true, pred):.4f}')
-
-            # Graph: Training Result
-            st.altair_chart(plot_training_result(true, pred, targets[0]), 
-                            use_container_width=True)
-
-        elif mode == 'Classification':
-            st.markdown(f'AUC: {auc_score(true, pred)}')
-            st.markdown(f'LOGLOSS: {logloss_score(true, pred)}')
-            st.markdown(f'Accuracy: {100*accuracy_score(true, pred):.2f} %')
-
-            # Graph: Training Result
-            st.pyplot(plot_confusion_matrix(true, pred, targets[0]))
-
-        # Feature importance
-        st.markdown('### Feature importance')
-
-        df_feature_importance = pd.DataFrame(
-            {'index'     : range(len(feature_names)),
-             'feature'   : feature_names,
-             'importance': feature_importances}
-        )
-
-        # Download Feature Importance        
-        href = get_table_download_link(
-            df_feature_importance, 
-            file_name='importance.csv', 
-            title='Download CSV'
-        )
-        st.markdown(href, unsafe_allow_html=True)
-
-        num_init = np.minimum(10, len(feature_names))        
-        show_number = st.number_input('Number',
-                                      value=num_init,
-                                      min_value=1,
-                                      max_value=len(feature_names),
-                                      step=1)
-
-        # Graph: Feature Importance
+    # Graph
+    if st.session_state['mode'] == 'Regression':
         st.altair_chart(
-            plot_feature_importance(df_feature_importance, targets[0], num=show_number, normalize=f_normalize), 
-            use_container_width=True
+            plot_reg_evaluation(
+                true = st.session_state['model']['oob_true'],
+                pred = st.session_state['model']['oob_pred'],
+                target = st.session_state['model']['target']
+            ), 
+            use_container_width = True
+        )
+    elif st.session_state['mode'] == 'Binary Classification':
+        st.pyplot(
+            plot_confusion_matrix(
+                true = st.session_state['model']['oob_true'],
+                pred = st.session_state['model']['oob_pred'],
+                target = st.session_state['model']['target']
+            )
         )
 
-        # Analysis Type and Feature Selection
-        st.markdown('### Explain Model')
+    # STEP 3. Feature Importance
+    features = st.session_state['shap']['features']
+    importance = st.session_state['shap']['importance']
+
+    col_1, col_2 = st.columns([3, 1])
+    with col_1:
+        st.markdown('### STEP 3. Feature Importance')
+    with col_2:
+        show_number = st.number_input(
+            label = 'Number',
+            value = np.minimum(10, len(features)),
+            min_value = 1,
+            max_value = len(features),
+            step = 1
+        )
+
+    st.altair_chart(
+        plot_importance(
+            features = features,
+            importance = importance,
+            target = st.session_state['model']['target'], 
+            num = show_number
+        ), 
+        use_container_width=True
+    )
+
+    # STEP 4. Local Explanation
+    df = df = st.session_state['_df_3']
+    source = st.session_state['shap']['source']
+    shap_value = st.session_state['shap']['shap_value']
+
+    col_1, col_2 = st.columns([3, 1])
+    with col_1:
+        st.markdown('### STEP 4. Local Explanation')
+    with col_2:
         type_name = st.selectbox(
-            'Analysis Type (1D Simulation, 2D Simulation and SHAP)', 
-            ['1D Simulation', '2D Simulation', 'SHAP'], 
-            index=2
+            label = 'TYPE',
+            options = ['SHAP', '1D', '2D']
         )
 
-        if type_name == 'SHAP':     
-            feature = st.selectbox('Feature name', feature_names, index=0)
-            x = shap_source[feature].values
-            y = shap_value[feature].values
+    if type_name == 'SHAP':
+        feature = st.selectbox(
+            label = 'Feature', 
+            options = features
+        )
 
-            # Download: 1D Simulation
-            href = get_table_download_link(
-                pd.DataFrame({feature: x, targets[0]: y}), 
-                file_name=f'shap_{feature}_{targets[0]}.csv', 
-                title='Download CSV'
+        st.altair_chart(
+            plot_shap(
+                x = source[feature].values, 
+                y = shap_value[feature].values, 
+                x_all = df[feature].dropna().values,
+                feature = feature,
+                target = st.session_state['model']['target'],
+                mean = np.mean(st.session_state['model']['oob_true'])
+            ),
+            use_container_width = True
+        )   
+
+        # Print Encode
+        if feature in st.session_state['encoder']:
+            st.write(feature)
+            st.write(st.session_state['encoder'][feature])
+
+    elif type_name == '1D':
+        feature = st.selectbox(
+            label = 'Feature', 
+            options = features
+        )
+
+        x, y = simulation_1d(
+            datasets = st.session_state['model']['datasets'],
+            models = st.session_state['model']['models'],
+            features = st.session_state['model']['features'],
+            feature = feature,
+            mode = st.session_state['model']['type'],
+            num = st.session_state['config']['simulation']['num']
+        )
+
+        st.altair_chart(
+            plot_simulation_1d(
+                x = x, 
+                y = y,
+                x_all = df[feature].dropna().values,
+                feature = feature, 
+                target = st.session_state['model']['target']
+            ),
+            use_container_width = True
+        )
+
+    elif type_name == '2D':
+        col_0, col_1 = st.columns(2)
+        with col_0:
+            feature_0 = st.selectbox(
+                label = 'Feature #1', 
+                options = features
             )
-            st.markdown(href, unsafe_allow_html=True)
-
-            # Graph: SHAP
-            st.altair_chart(plot_shap(x, y, 
-                                      shap_source[feature].dropna().values,
-                                      feature, targets[0], 
-                                      shap_source[targets[0]].mean().round(2)), 
-                            use_container_width=True)
-
-        elif type_name == '1D Simulation':
-            feature = st.selectbox('Feature name', feature_names, index=0)
-            x, y = simulator_1d(df_data, 
-                                models,
-                                features, 
-                                feature, 
-                                mode = mode,
-                                n    = CFG.GRAPH.SIMULATION_NUMBER)
-
-            # Download: 1D Simulation
-            href = get_table_download_link(
-                pd.DataFrame({feature: x, targets[0]: y}), 
-                file_name=f'1d_simulation_{feature}_{targets[0]}.csv', 
-                title='Download CSV'
-            )
-            st.markdown(href, unsafe_allow_html=True)
-
-            # Graph: 1D Simulation
-            st.altair_chart(plot_1d_simulation(x, y, 
-                                               df_data[feature].dropna().values,
-                                               feature, targets[0]), 
-                            use_container_width=True)
-
-        elif type_name == '2D Simulation':
-            sim_layout_1, sim_layout_2 = st.beta_columns(2)
-            with sim_layout_1:
-                feature_1 = st.selectbox('Feature #1', feature_names, index=0)
-            with sim_layout_2:
-                feature_2 = st.selectbox('Feature #2', feature_names, index=1)
-
-            x1, x2, y = simulator_2d(
-                df_data, 
-                models,
-                features, 
-                feature_1, 
-                feature_2, 
-                mode=mode,
-                n=CFG.GRAPH.SIMULATION_NUMBER
+        with col_1:
+            feature_1 = st.selectbox(
+                label = 'Feature #2', 
+                options = [feature for feature in features if feature != feature_0]
             )
 
-            # Download: 2D Simulation
-            href = get_table_download_link(
-                pd.DataFrame({feature_1: x1, feature_2: x2, targets[0]: y}), 
-                file_name=f'2d_simulation_{feature_1}_{feature_2}_{targets[0]}.csv', 
-                title='Download CSV'
-            )
-            st.markdown(href, unsafe_allow_html=True)
+        x_0, x_1, y = simulation_2d(
+            datasets = st.session_state['model']['datasets'],
+            models = st.session_state['model']['models'],
+            features = st.session_state['model']['features'],
+            feature_0 = feature_0,
+            feature_1 = feature_1,
+            mode = st.session_state['model']['type'],
+            num = st.session_state['config']['simulation']['num']
+        )
 
-            # Graph: Simulation (2D)
-            st.altair_chart(plot_2d_simulation(x1, x2, y,
-                                               feature_1, feature_2, targets[0]), 
-                            use_container_width=True)
+        st.altair_chart(
+            plot_simulation_2d(
+                x_0 = x_0,
+                x_1 = x_1,
+                y = y,
+                feature_0 = feature_0,
+                feature_1 = feature_1, 
+                target = st.session_state['model']['target']
+            ),
+            use_container_width = True
+        )
+
+    # STEP 5. Prediction
+    st.markdown('### STEP 5. Prediction')
+    col_0, col_1 = st.columns(2)
+    with col_0:
+        if st.button('Prediction'):
+            # Load Data
+            df_test = read_csv(
+                path = st.session_state['test_file_path'],
+                max_len = None,
+                add_random_noise = st.session_state['config']['data']['add_random_noise'],
+                random_state = st.session_state['config']['setup']['random_state'],
+            )
+
+            # Check features
+            features = st.session_state['model']['features']
+            n_features = []       
+            for feature in features:
+                if feature not in list(df_test.columns):
+                    n_features.append(feature)
+
+            if len(n_features) != 0:
+                st.write(f"TEST File: {st.session_state['test_file_path']}")
+                st.write(f"{n_features} are not in the test file.")
+            else:
+                with st.spinner(text="In progress..."):
+                    # Copy df_test
+                    df_data = df_test.copy()
+
+                    # Apply filter
+                    df_data = apply_filter(
+                        df = df_data,
+                        filter = st.session_state['filter']
+                    )
+
+                    # Fill NaN Data
+                    df_data = replace_nan(
+                        df = df_data, 
+                        random_state = st.session_state['config']['setup']['random_state']
+                    )
+
+                    # Encode Data
+                    df_data = encode(
+                        df = df_data,
+                        encoder = st.session_state['encoder']
+                    )
+
+                    # Prediction
+                    inputs = df_data[features].values
+                    pred = []
+                    for model in st.session_state['model']['models']:
+                        if st.session_state['model']['type'] == 'reg':
+                            p = model.predict(inputs)
+                        elif st.session_state['model']['type'] == 'clf':
+                            p = model.predict_proba(inputs)[:, 1]
+                        pred.append(p)
+                    pred = np.mean(pred, axis=0)
+
+                    # Output Data
+                    target = st.session_state['model']['target']
+                    df_test[f'pred({target})'] = pred
+
+                # Download CSV
+                path = st.session_state['test_file_path']
+                if type(path) == st.uploaded_file_manager.UploadedFile:
+                    name = path.name
+                else:
+                    name = os.path.basename(path) 
+           
+                with col_1:
+                    st.download_button(
+                        label = 'Download (.csv)',
+                        data = df_test.to_csv(index=False).encode('utf-8-sig'),
+                        file_name = f'pred_{name}',
+                        mime = 'text/csv',
+                        key = 'download-csv'
+                    )
