@@ -2,6 +2,7 @@ import numpy as np
 from pandas import DataFrame
 from pandas.api.types import is_numeric_dtype
 
+
 def delete_outlier(
     df: DataFrame,
     lower_limit: float=0.01, 
