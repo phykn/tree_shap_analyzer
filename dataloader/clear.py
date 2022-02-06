@@ -1,6 +1,7 @@
 import numpy as np
 from pandas import DataFrame
 
+
 def clear_data(
     df: DataFrame
 ) -> DataFrame:
