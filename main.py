@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 import time
 import warnings
+from datetime import datetime
 from glob import glob
 from omegaconf import OmegaConf
 from pandas.api.types import is_numeric_dtype
@@ -133,7 +134,7 @@ state_1 = {}
 
 ## Get Filter Number
 num_filter = st.sidebar.number_input(
-    label = 'Filter Number',
+    label = 'Filter',
     value = 0, 
     min_value = 0,
     max_value = len(st.session_state['_df_0'].columns), 
@@ -444,6 +445,10 @@ st.write(st.session_state['_df_3'].iloc[:5])
 if st.session_state['model'] is None:
     st.markdown("""---""")
     if st.button('Train Model'):
+        # Log
+        time_now = str(datetime.now())[:19]
+        print(f'START | {time_now} | {get_session_id()}')
+
         # Load Data
         df = st.session_state['_df_3'].copy()
         features = st.session_state['feature_selected']
@@ -736,18 +741,15 @@ else:
                 st.write(f"{n_features} are not in the test file.")
             else:
                 with st.spinner(text="In progress..."):
-                    # Copy df_test
-                    df_data = df_test.copy()
-
                     # Apply filter
-                    df_data = apply_filter(
-                        df = df_data,
+                    df_test = apply_filter(
+                        df = df_test,
                         filter = st.session_state['filter']
                     )
 
                     # Fill NaN Data
                     df_data = replace_nan(
-                        df = df_data, 
+                        df = df_test.copy(), 
                         random_state = st.session_state['config']['setup']['random_state']
                     )
 
