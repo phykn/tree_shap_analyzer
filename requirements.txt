@@ -9,3 +9,4 @@ scikit-learn
 lightgbm
 xgboost
 streamlit==1.5.0
+streamlit_autorefresh
