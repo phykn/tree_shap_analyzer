@@ -1,6 +1,7 @@
 from pandas import DataFrame
 from typing import Dict, List, Any
 
+
 def apply_filter(
     df: DataFrame,
     filter: Dict[str, List[Any]]
