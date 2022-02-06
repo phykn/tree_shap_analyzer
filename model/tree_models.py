@@ -4,6 +4,7 @@ from lightgbm import LGBMRegressor, LGBMClassifier
 from xgboost import XGBRegressor, XGBClassifier
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, ExtraTreesRegressor, ExtraTreesClassifier
 
+
 def lgb_reg(
     x: ndarray, 
     y: ndarray,
@@ -27,6 +28,7 @@ def lgb_reg(
         'name': 'LGBMRegressor', 
         'type': 'reg'
     }
+
 
 def lgb_clf(
     x: ndarray, 
@@ -52,6 +54,7 @@ def lgb_clf(
         'type': 'clf'
     }
 
+
 def xgb_reg(
     x: ndarray, 
     y: ndarray,
@@ -76,6 +79,7 @@ def xgb_reg(
         'name': 'XGBRegressor', 
         'type': 'reg'
     }
+
 
 def xgb_clf(
     x: ndarray, 
@@ -103,6 +107,7 @@ def xgb_clf(
         'type': 'clf'
     }
 
+
 def rf_reg(
     x: ndarray, 
     y: ndarray,
@@ -126,6 +131,7 @@ def rf_reg(
         'name': 'RandomForestRegressor', 
         'type': 'reg'
     }
+
 
 def rf_clf(
     x: ndarray, 
@@ -151,6 +157,7 @@ def rf_clf(
         'type': 'clf'
     }
 
+
 def et_reg(
     x: ndarray, 
     y: ndarray,
@@ -174,6 +181,7 @@ def et_reg(
         'name': 'ExtraTreesRegressor', 
         'type': 'reg'
     }
+
 
 def et_clf(
     x: ndarray, 
