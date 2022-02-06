@@ -3,6 +3,7 @@ import pandas as pd
 from numpy import ndarray
 from typing import Tuple, List, Dict, Any
 
+
 def simulation_1d(
     datasets: List[Dict[str, ndarray]],
     models: List[Any],
@@ -76,6 +77,7 @@ def simulation_2d(
     data[:, index_0] = x_0
     data[:, index_1] = x_1
     
+    # Prediction
     y = []
     for model in models:
         if mode == 'reg':
