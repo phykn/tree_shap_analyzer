@@ -2,6 +2,7 @@ from typing import List, Dict
 from pandas import DataFrame
 from sklearn.model_selection import KFold, StratifiedKFold
 
+
 def split_data(
     df: DataFrame, 
     features: List[str], 
