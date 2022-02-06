@@ -22,20 +22,17 @@ def read_csv(
     - random_state: Setting for randomness.
     '''
 
-    if path:
-        # Load Data
-        df = pd.read_csv(path)
+    # Load Data
+    df = pd.read_csv(path)
 
-        # Set maximum output size
-        index = np.array(df.index)
-        if max_len:
-            if len(index) > max_len:
-                np.random.seed(random_state)
-                index = np.random.choice(index, size=max_len, replace=False)
-                index = np.sort(index)
-        df = df.loc[index].reset_index(drop=True)
-    else:
-        df = pd.DataFrame({'x': range(100), 'y': range(100)})
+    # Set maximum output size
+    index = np.array(df.index)
+    if max_len:
+        if len(index) > max_len:
+            np.random.seed(random_state)
+            index = np.random.choice(index, size=max_len, replace=False)
+            index = np.sort(index)
+    df = df.loc[index].reset_index(drop=True)
 
     # Add random column
     if add_random_noise:        
