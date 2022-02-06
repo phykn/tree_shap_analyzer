@@ -5,6 +5,7 @@ from typing import Tuple
 from numpy import ndarray
 from pandas import DataFrame
 
+
 def _shap_value(
     model, 
     x_data: ndarray, 
