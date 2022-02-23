@@ -5,7 +5,7 @@ from pandas import DataFrame
 def clear_data(
     df: DataFrame
 ) -> DataFrame:
-    '''Select usable columns'''
+    '''Select useable columns'''
 
     columns = []
     for column in df.columns:

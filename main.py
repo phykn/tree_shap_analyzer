@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import streamlit as st
 import time
 import warnings
@@ -17,18 +18,21 @@ from analysis import get_shap_value, get_importance, simulation_1d, simulation_2
 from graph.evaluation import plot_reg_evaluation, plot_confusion_matrix
 from graph.importance import plot_importance
 from graph.explanation import plot_shap, plot_simulation_1d, plot_simulation_2d
-from helper import get_session_id, encode
+from graph.matplot import plot_simulation_1d as matplotlib_simulation_1d
+from graph.matplot import plot_shap as matplotlib_shap
+from helper import get_session_id, encode, convert_figs2zip
 warnings.filterwarnings('ignore')
 
 
 # Create Session
 if 'config' not in st.session_state:
     st.session_state['config'] = OmegaConf.load('config.yaml')
-
+if 'files' not in st.session_state:
+    st.session_state['files'] = glob(
+        f"{st.session_state['config']['file']['root']}/*.csv"
+    )
 if 'train_file_path' not in st.session_state:
     st.session_state['train_file_path'] = None
-if 'test_file_path' not in st.session_state:
-    st.session_state['test_file_path'] = None
 if 'filter' not in st.session_state:
     st.session_state['filter'] = None
 if 'encoder' not in st.session_state:
@@ -77,36 +81,14 @@ start_time = time.time()
 # State 0: _df_0
 state_0 = {}
 
-## Select Train, Test Data
-col_1, col_2 = st.columns(2)
 
-with col_1:
-    if st.session_state['config']['file']['online']:
-        train_file_path = st.file_uploader(
-            label = 'Train Data', 
-            type = 'csv', 
-        )
-    else:
-        train_file_path = st.selectbox(
-            label = 'Train Data', 
-            options = glob(f"{st.session_state['config']['file']['root']}/*.csv")
-        )
-    train_file_path = 'data/titanic_train.csv' if train_file_path is None else train_file_path
-    state_0['train_file_path'] = train_file_path
+## Select Train
+train_file_path = st.selectbox(
+    label = 'Train Data', 
+    options = st.session_state['files']
+)
+state_0['train_file_path'] = train_file_path
 
-with col_2:
-    if st.session_state['config']['file']['online']:
-        test_file_path = st.file_uploader(
-            label = 'Test Data', 
-            type = 'csv', 
-        )
-    else:
-        test_file_path = st.selectbox(
-            label = 'Test Data', 
-            options = glob(f"{st.session_state['config']['file']['root']}/*.csv")
-        )
-    test_file_path = 'data/titanic_test.csv' if test_file_path is None else test_file_path
-    st.session_state['test_file_path'] = test_file_path
 
 ## update _df_0
 if (
@@ -183,7 +165,7 @@ if mode == 'Binary Classification':
 
         with column_c0:
             l_q = st.number_input(
-                label = 'Label 0 Upper Limit (%)', 
+                label = 'Label 0 Percentile (%)', 
                 value = 20, 
                 min_value = 0, 
                 max_value = 100, 
@@ -193,7 +175,7 @@ if mode == 'Binary Classification':
 
         with column_c1:
             h_q = st.number_input(
-                label = 'Label 1 Lower Limit (%)', 
+                label = 'Label 1 Percentile (%)', 
                 value = 80, 
                 min_value = 0, 
                 max_value = 100, 
@@ -203,13 +185,13 @@ if mode == 'Binary Classification':
 
         with column_i0:
             st.metric(
-                label = 'Label 0 Maximum', 
+                label = 'Label 0 Max Value', 
                 value = f"{np.percentile(values, q=l_q):.4f}"
             )
 
         with column_i1:
             st.metric(
-                label = 'Label 1 Minimum', 
+                label = 'Label 1 Min Value', 
                 value = f"{np.percentile(values, q=h_q):.4f}"
             )
 
@@ -592,6 +574,7 @@ else:
             )
         )
 
+
     # STEP 3. Feature Importance
     features = st.session_state['shap']['features']
     importance = st.session_state['shap']['importance']
@@ -618,6 +601,19 @@ else:
         use_container_width=True
     )
 
+    # Download
+    df_importance = pd.DataFrame()
+    df_importance['feature'] = features
+    df_importance['importance'] = importance
+    st.download_button(
+        label = 'Download (.csv)',
+        data = df_importance.to_csv(index=False).encode('utf-8-sig'),
+        file_name = f'importance.csv',
+        mime = 'text/csv',
+        key = 'download-csv'
+    )
+
+
     # STEP 4. Local Explanation
     df = df = st.session_state['_df_3']
     source = st.session_state['shap']['source']
@@ -629,15 +625,13 @@ else:
     with col_2:
         type_name = st.selectbox(
             label = 'TYPE',
-            options = ['SHAP', '1D', '2D']
+            options = ['SHAP', '1D Simulation', '2D Simulation']
         )
-
     if type_name == 'SHAP':
         feature = st.selectbox(
             label = 'Feature', 
             options = features
         )
-
         st.altair_chart(
             plot_shap(
                 x = source[feature].values, 
@@ -649,18 +643,46 @@ else:
             ),
             use_container_width = True
         )   
-
         # Print Encode
         if feature in st.session_state['encoder']:
             st.write(feature)
             st.write(st.session_state['encoder'][feature])
 
-    elif type_name == '1D':
+        # Download
+        col_0, col_1 = st.columns(2)
+        with col_0:
+            if st.button('Extract all figures'):
+                progress = st.progress(0)
+                figs = []
+                for i, feature in enumerate(features):
+                    # get figure
+                    figs.append(
+                        matplotlib_shap(
+                            x = source[feature].values, 
+                            y = shap_value[feature].values, 
+                            x_all = df[feature].dropna().values,
+                            feature = feature,
+                            target = st.session_state['model']['target'],
+                            mean = np.mean(st.session_state['model']['oob_true'])
+                        )
+                    )
+                    # Update progress
+                    progress.progress((i+1)/len(features))
+
+                # convert to zip
+                with col_1:
+                    st.download_button(
+                        label = 'Download (.zip)',
+                        data = convert_figs2zip(figs),
+                        file_name = 'shap.zip',
+                        mime="application/octet-stream"
+                    )
+
+    elif type_name == '1D Simulation':
         feature = st.selectbox(
             label = 'Feature', 
             options = features
         )
-
         x, y = simulation_1d(
             datasets = st.session_state['model']['datasets'],
             models = st.session_state['model']['models'],
@@ -669,7 +691,6 @@ else:
             mode = st.session_state['model']['type'],
             num = st.session_state['config']['simulation']['num']
         )
-
         st.altair_chart(
             plot_simulation_1d(
                 x = x, 
@@ -680,8 +701,51 @@ else:
             ),
             use_container_width = True
         )
+        # Print Encode
+        if feature in st.session_state['encoder']:
+            st.write(feature)
+            st.write(st.session_state['encoder'][feature])
 
-    elif type_name == '2D':
+        # Download
+        col_0, col_1 = st.columns(2)
+        with col_0:
+            if st.button('Extract all figures'):
+                progress = st.progress(0)
+                figs = []
+                for i, feature in enumerate(features):
+                    # get x and y
+                    x, y = simulation_1d(
+                        datasets = st.session_state['model']['datasets'],
+                        models = st.session_state['model']['models'],
+                        features = st.session_state['model']['features'],
+                        feature = feature,
+                        mode = st.session_state['model']['type'],
+                        num = st.session_state['config']['simulation']['num']
+                    )
+                    # get figure
+                    figs.append(
+                        matplotlib_simulation_1d(
+                            x = x, 
+                            y = y,
+                            x_all = df[feature].dropna().values,
+                            feature = feature, 
+                            target = st.session_state['model']['target']
+                        )
+                    )
+                    # Update progress
+                    progress.progress((i+1)/len(features))
+
+                # convert to zip
+                with col_1:
+                    st.download_button(
+                        label = 'Download (.zip)',
+                        data = convert_figs2zip(figs),
+                        file_name = '1d_simulation.zip',
+                        mime="application/octet-stream"
+                    )
+
+
+    elif type_name == '2D Simulation':
         col_0, col_1 = st.columns(2)
         with col_0:
             feature_0 = st.selectbox(
@@ -716,14 +780,20 @@ else:
             use_container_width = True
         )
 
+
     # STEP 5. Prediction
     st.markdown('### STEP 5. Prediction')
+
+    test_file_path = st.selectbox(
+        label = 'Test Data',
+        options = st.session_state['files'],
+    )
     col_0, col_1 = st.columns(2)
     with col_0:
         if st.button('Prediction'):
             # Load Data
             df_test = read_csv(
-                path = st.session_state['test_file_path'],
+                path = test_file_path,
                 max_len = None,
                 add_random_noise = st.session_state['config']['data']['add_random_noise'],
                 random_state = st.session_state['config']['setup']['random_state'],
@@ -772,14 +842,13 @@ else:
 
                     # Output Data
                     target = st.session_state['model']['target']
-                    df_test[f'pred({target})'] = pred
+                    df_test[f'pred_{target}'] = pred
+                    if 'random_noise' in df_test.columns:
+                        df_test = df_test.drop(columns=['random_noise'])
 
                 # Download CSV
-                path = st.session_state['test_file_path']
-                if type(path) == st.uploaded_file_manager.UploadedFile:
-                    name = path.name
-                else:
-                    name = os.path.basename(path) 
+                path = test_file_path
+                name = os.path.basename(path) 
            
                 with col_1:
                     st.download_button(
