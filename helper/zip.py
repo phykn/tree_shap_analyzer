@@ -1,6 +1,7 @@
 import zipfile
 from typing import List
 from io import BytesIO
+from matplotlib.figure import Figure
 
 
 def convert_figs2zip(
