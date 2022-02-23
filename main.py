@@ -807,8 +807,8 @@ else:
                     n_features.append(feature)
 
             if len(n_features) != 0:
-                st.write(f"TEST File: {st.session_state['test_file_path']}")
-                st.write(f"{n_features} are not in the test file.")
+                st.write(f'TEST File: {test_file_path}')
+                st.write(f'{n_features} are not in the test file.')
             else:
                 with st.spinner(text="In progress..."):
                     # Apply filter
