@@ -39,12 +39,12 @@ warnings.filterwarnings('ignore')
 if 'config' not in st.session_state:
     st.session_state['config'] = OmegaConf.load('config.yaml')
 if 'files' not in st.session_state:
-    st.session_state['files'] = glob(
+    st.session_state['files'] = np.sort(glob(
         os.path.join(
             st.session_state['config']['file']['root'],
             '*.csv'
         )
-    )
+    ))
 if 'train_file_path' not in st.session_state:
     st.session_state['train_file_path'] = None
 if 'filter' not in st.session_state:
