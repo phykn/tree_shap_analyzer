@@ -1,11 +1,11 @@
-### XAI for Tree Model
-This web application is powered by streamlit.
+### Model Analyzer
+URL: https://share.streamlit.io/phykn/model_analyzer/main/main.py  
 
-### How To Run
-streamlit run main.py --server.headless true --server.enableWebsocketCompression false --browser.gatherUsageStats false --server.port [port]
+How to Run  
+streamlit run main.py --server.headless true --server.port 8501 --server.enableWebsocketCompression false --browser.gatherUsageStats false  
 
-### Sample Dataset
-The web app contains sample datasets. Please refer to pages below for the description.  
-[1] https://www.kaggle.com/prasadperera/the-boston-housing-dataset (boston_housing.csv)  
-[2] https://www.kaggle.com/hmavrodiev/london-bike-sharing-dataset (london_bike.csv)  
-[3] https://www.kaggle.com/c/titanic (titanic_train.csv, titanic_test.csv)
+boston_housing.csv:  
+URL: https://www.kaggle.com/prasadperera/the-boston-housing-dataset   
+
+wine_quality_white.csv:  
+URL: https://archive.ics.uci.edu/ml/datasets/wine+quality  

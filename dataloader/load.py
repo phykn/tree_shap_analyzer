@@ -23,7 +23,10 @@ def read_csv(
     '''
 
     # Load Data
-    df = pd.read_csv(path)
+    try:
+        df = pd.read_csv(path, encoding='utf-8')
+    except:
+        df = pd.read_csv(path, encoding='cp949')
 
     # Set maximum output size
     index = np.array(df.index)

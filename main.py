@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import time
-import warnings
 from datetime import datetime
 from glob import glob
 from omegaconf import OmegaConf
@@ -21,7 +20,19 @@ from graph.explanation import plot_shap, plot_simulation_1d, plot_simulation_2d
 from graph.matplot import plot_simulation_1d as matplotlib_simulation_1d
 from graph.matplot import plot_shap as matplotlib_shap
 from helper import get_session_id, encode, convert_figs2zip
+
+
+# Warning
+import warnings
 warnings.filterwarnings('ignore')
+
+
+# # Korean
+# import matplotlib
+# from matplotlib import font_manager, rc
+# font_name = font_manager.FontProperties(fname="c:/Windows/Fonts/malgun.ttf").get_name()
+# rc('font', family=font_name)
+# matplotlib.rcParams['axes.unicode_minus'] = False
 
 
 # Create Session
@@ -29,7 +40,10 @@ if 'config' not in st.session_state:
     st.session_state['config'] = OmegaConf.load('config.yaml')
 if 'files' not in st.session_state:
     st.session_state['files'] = glob(
-        f"{st.session_state['config']['file']['root']}/*.csv"
+        os.path.join(
+            st.session_state['config']['file']['root'],
+            '*.csv'
+        )
     )
 if 'train_file_path' not in st.session_state:
     st.session_state['train_file_path'] = None
@@ -69,28 +83,29 @@ if '_df_3' not in st.session_state:
 
 
 # Title
-st.markdown('# XAI for Tree Models')
+st.markdown('# XAI for tree models')
 st.write(f'SESSION ID: {get_session_id()}')
 
+
 # STEP 1.
-st.markdown('### STEP 1. Data Prepration')
+st.markdown('### STEP 1. Data preparation')
 
 # Start Time
 start_time = time.time()
 
+
 # State 0: _df_0
 state_0 = {}
 
-
-## Select Train
+# Select Train
 train_file_path = st.selectbox(
     label = 'Train Data', 
-    options = st.session_state['files']
+    options = st.session_state['files'],
+    index = 0
 )
 state_0['train_file_path'] = train_file_path
 
-
-## update _df_0
+# update _df_0
 if (
     state_0 != st.session_state['state_0']
 ):
@@ -111,10 +126,11 @@ if (
 # Print Options
 st.sidebar.write('Options')
 
+
 # State 1: _df_1
 state_1 = {}
 
-## Get Filter Number
+# Get Filter Number
 num_filter = st.sidebar.number_input(
     label = 'Filter',
     value = 0, 
@@ -123,7 +139,7 @@ num_filter = st.sidebar.number_input(
     step=1
 )
 
-## Get Filter Value
+# Get Filter Value
 filter = {}
 if num_filter > 0:
     for i in range(num_filter):
@@ -143,21 +159,21 @@ if num_filter > 0:
             filter[column] = selected_values
 state_1['filter'] = filter
 
-## Get Mode
+# Get Mode
 mode = st.selectbox(
-    label = 'Mode', 
+    label = 'Type', 
     options = ['Regression', 'Binary Classification']
 )
 state_1['mode'] = mode
 
-## Get Target
+# Get Target
 target = st.selectbox(
     label = 'Target', 
     options = list(st.session_state['_df_0'].columns)
 )
 state_1['target'] = target
 
-## Target Encoding
+# Target Encoding
 if mode == 'Binary Classification':
     values = st.session_state['_df_0'][target].dropna()
     if is_numeric_dtype(values):
@@ -165,7 +181,7 @@ if mode == 'Binary Classification':
 
         with column_c0:
             l_q = st.number_input(
-                label = 'Label 0 Percentile (%)', 
+                label = 'Label 0 Upper Limit (%)', 
                 value = 20, 
                 min_value = 0, 
                 max_value = 100, 
@@ -175,7 +191,7 @@ if mode == 'Binary Classification':
 
         with column_c1:
             h_q = st.number_input(
-                label = 'Label 1 Percentile (%)', 
+                label = 'Label 0 Lower Limit (%)', 
                 value = 80, 
                 min_value = 0, 
                 max_value = 100, 
@@ -185,13 +201,13 @@ if mode == 'Binary Classification':
 
         with column_i0:
             st.metric(
-                label = 'Label 0 Max Value', 
+                label = 'Label 0 Maximum', 
                 value = f"{np.percentile(values, q=l_q):.4f}"
             )
 
         with column_i1:
             st.metric(
-                label = 'Label 1 Min Value', 
+                label = 'Label 1 Minimum', 
                 value = f"{np.percentile(values, q=h_q):.4f}"
             )
 
@@ -215,7 +231,7 @@ if mode == 'Binary Classification':
             )
             state_1['label_1'] = label_1
 
-## update _df_1
+# update _df_1
 if (
     state_0 != st.session_state['state_0'] or 
     state_1 != st.session_state['state_1']
@@ -280,28 +296,21 @@ if (
 # State 2: _df_2
 state_2 = {}
 
-## NaN Data
+# NaN Data
 nan_data = st.sidebar.selectbox(
     label = 'NaN Data',
     options = ['Delete', 'Replace']
 )
 state_2['nan_data'] = nan_data
 
-## Outlier
-del_outlier = st.sidebar.selectbox(
-    label = 'Delete Outlier', 
-    options = [False, True]
-)
-state_2['del_outlier'] = del_outlier
-
-## Auto Feature Selection
+# Auto Feature Selection
 auto_feature_selection = st.sidebar.selectbox(
     label = 'Auto Feature Selection',
     options = [False, True]
 )
 state_2['auto_feature_selection'] = auto_feature_selection
 
-## update _df_2
+# update _df_2
 if (
     state_0 != st.session_state['state_0'] or 
     state_1 != st.session_state['state_1'] or
@@ -310,33 +319,21 @@ if (
     # Get DF
     df = st.session_state['_df_1'].copy()
 
-    # NaN Data
-    if state_2['nan_data'] == 'Delete':
-        df = delete_nan(df)
-    elif state_2['nan_data'] == 'Replace':
-        df = replace_nan(
-            df = df, 
-            random_state = st.session_state['config']['setup']['random_state']
-        )
-
-    # Delete Outlier
-    if state_2['del_outlier']:
-        df = delete_outlier(df)
-
+    # Encode Data
     df, encoder = encode_category(df)
 
     # Update session state    
     st.session_state['nan_data'] = state_2['nan_data']
-    st.session_state['del_outlier'] = state_2['del_outlier']
     st.session_state['auto_feature_selection'] = auto_feature_selection
     st.session_state['encoder'] = encoder
     st.session_state['_df_2'] = df.reset_index(drop=True)
     st.session_state['model'] = None
 
+
 # State 3: _df_3
 state_3 = {}
 
-## Select Features
+# Select Features
 st.sidebar.markdown("""---""")
 st.sidebar.write('Features')
 st.sidebar.text(f'Data quality | name')
@@ -350,7 +347,7 @@ index = [
 feature_selected = list(np.array(st.session_state['feature_all'])[index])
 state_3['feature_selected'] = feature_selected
 
-### Magage Features
+# Magage Features
 def uncheck():
     for column in st.session_state['feature_all']:
         st.session_state[f'_{column}'] = False
@@ -370,7 +367,7 @@ with col_2:
         on_click = uncheck
     )
 
-## update _df_3
+# update _df_3
 if (
     state_0 != st.session_state['state_0'] or 
     state_1 != st.session_state['state_1'] or
@@ -396,8 +393,10 @@ st.session_state['state_1'] = state_1
 st.session_state['state_2'] = state_2
 st.session_state['state_3'] = state_3
 
+
 # Data wall time
 wall_time = time.time() - start_time
+
 
 # Print Information
 st.sidebar.markdown("""---""")
@@ -405,6 +404,7 @@ st.sidebar.write(f"Wall time: {wall_time:.4f} sec")
 st.sidebar.write(f"Data Num: {len(st.session_state['_df_3'])}")
 st.sidebar.write(f"Target: {st.session_state['target']}")
 st.sidebar.write(f"Feature Num: {len(feature_selected)}")
+
 
 # Print Encoder
 columns = st.session_state['feature_selected'] + [st.session_state['target']]
@@ -418,6 +418,7 @@ if len(encoder) > 0:
     st.sidebar.write('Encoded Features')
     st.sidebar.write(encoder)
 
+
 # Print DF
 st.write('Sample Data (5)')
 st.write(st.session_state['_df_3'].iloc[:5])
@@ -426,10 +427,10 @@ st.write(st.session_state['_df_3'].iloc[:5])
 # Train Model
 if st.session_state['model'] is None:
     st.markdown("""---""")
-    if st.button('Train Model'):
+    if st.button('Start Model Training'):
         # Log
         time_now = str(datetime.now())[:19]
-        print(f'START | {time_now} | {get_session_id()}')
+        print(f'START | {time_now} | {get_session_id()} | {st.session_state["train_file_path"]}')
 
         # Load Data
         df = st.session_state['_df_3'].copy()
@@ -437,8 +438,25 @@ if st.session_state['model'] is None:
         target = st.session_state['target']
         if st.session_state['mode'] == 'Regression':
             mode = 'reg'
-        elif st.session_state['mode'] == 'Binary Classification':
+        if st.session_state['mode'] == 'Binary Classification':
             mode = 'clf'
+
+        # NaN Data
+        df = df[features+[target]].copy()
+
+        if df.isna().sum().sum() == 0:
+            st.session_state['nan_processed'] = False
+        else:
+            if st.session_state['nan_data'] == 'Delete':
+                df = delete_nan(df)
+            elif st.session_state['nan_data'] == 'Replace':
+                df = replace_nan(
+                    df = df, 
+                    random_state = st.session_state['config']['setup']['random_state']
+                )
+            st.session_state['nan_processed'] = True
+
+        st.session_state['data_num'] = len(df)
 
         # Dataset
         datasets = split_data(
@@ -540,10 +558,18 @@ if st.session_state['model'] is None:
         # Refresh page
         st_autorefresh(interval=100, limit=2)
 
+
 # Result
 else:
     # STEP 2. Evaluation
-    st.markdown('### STEP 2. Model Evaluation')
+    st.markdown('### STEP 2. Evaluation')
+
+    # NaN Data
+    if st.session_state['nan_processed']:
+        st.write(f"NaN Data process mode is {st.session_state['nan_data']}.")
+
+    # Data number
+    st.write(f"Data Number: {st.session_state['data_num']}")
 
     # Print Best Model
     best = {}
@@ -601,7 +627,7 @@ else:
         use_container_width=True
     )
 
-    # Download
+    # Download CSV
     df_importance = pd.DataFrame()
     df_importance['feature'] = features
     df_importance['importance'] = importance
@@ -609,8 +635,7 @@ else:
         label = 'Download (.csv)',
         data = df_importance.to_csv(index=False).encode('utf-8-sig'),
         file_name = f'importance.csv',
-        mime = 'text/csv',
-        key = 'download-csv'
+        mime = 'text/csv'
     )
 
 
@@ -624,7 +649,7 @@ else:
         st.markdown('### STEP 4. Local Explanation')
     with col_2:
         type_name = st.selectbox(
-            label = 'TYPE',
+            label = 'Type',
             options = ['SHAP', '1D Simulation', '2D Simulation']
         )
     if type_name == 'SHAP':
@@ -643,12 +668,24 @@ else:
             ),
             use_container_width = True
         )   
+
         # Print Encode
         if feature in st.session_state['encoder']:
             st.write(feature)
             st.write(st.session_state['encoder'][feature])
 
-        # Download
+        # Download CSV
+        df_shap = pd.DataFrame()
+        df_shap[feature] = source[feature].values
+        df_shap['SHAP Value'] = shap_value[feature].values
+        st.download_button(
+            label = 'Download (.csv)',
+            data = df_shap.to_csv(index=False).encode('utf-8-sig'),
+            file_name = f'shap.csv',
+            mime = 'text/csv'
+        )
+
+        # Download figures
         col_0, col_1 = st.columns(2)
         with col_0:
             if st.button('Extract all figures'):
@@ -701,12 +738,24 @@ else:
             ),
             use_container_width = True
         )
+
         # Print Encode
         if feature in st.session_state['encoder']:
             st.write(feature)
             st.write(st.session_state['encoder'][feature])
 
-        # Download
+        # Download CSV
+        df_1d = pd.DataFrame()
+        df_1d[feature] = x
+        df_1d['Prediction'] = y
+        st.download_button(
+            label = 'Download (.csv)',
+            data = df_1d.to_csv(index=False).encode('utf-8-sig'),
+            file_name = f'1d_simulation.csv',
+            mime = 'text/csv'
+        )
+
+        # Download figures
         col_0, col_1 = st.columns(2)
         with col_0:
             if st.button('Extract all figures'):
@@ -780,6 +829,27 @@ else:
             use_container_width = True
         )
 
+        # Print Encode
+        if feature_0 in st.session_state['encoder']:
+            st.write(feature_0)
+            st.write(st.session_state['encoder'][feature_0])
+
+        if feature_1 in st.session_state['encoder']:
+            st.write(feature_1)
+            st.write(st.session_state['encoder'][feature_1])
+
+        # Download CSV
+        df_2d = pd.DataFrame()
+        df_2d[feature_0] = x_0
+        df_2d[feature_1] = x_1
+        df_2d['Prediction'] = y
+        st.download_button(
+            label = 'Download (.csv)',
+            data = df_2d.to_csv(index=False).encode('utf-8-sig'),
+            file_name = f'2d_simulation.csv',
+            mime = 'text/csv'
+        )
+
 
     # STEP 5. Prediction
     st.markdown('### STEP 5. Prediction')
@@ -787,10 +857,11 @@ else:
     test_file_path = st.selectbox(
         label = 'Test Data',
         options = st.session_state['files'],
+        index = 1
     )
     col_0, col_1 = st.columns(2)
     with col_0:
-        if st.button('Prediction'):
+        if st.button('Generate Prediction file'):
             # Load Data
             df_test = read_csv(
                 path = test_file_path,
@@ -807,8 +878,8 @@ else:
                     n_features.append(feature)
 
             if len(n_features) != 0:
-                st.write(f'TEST File: {test_file_path}')
-                st.write(f'{n_features} are not in the test file.')
+                st.write(f"TEST File: {test_file_path}")
+                st.write(f"{n_features} are not in the test file.")
             else:
                 with st.spinner(text="In progress..."):
                     # Apply filter
@@ -855,6 +926,5 @@ else:
                         label = 'Download (.csv)',
                         data = df_test.to_csv(index=False).encode('utf-8-sig'),
                         file_name = f'pred_{name}',
-                        mime = 'text/csv',
-                        key = 'download-csv'
+                        mime = 'text/csv'
                     )
