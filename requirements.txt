@@ -3,10 +3,10 @@ pandas
 omegaconf
 matplotlib
 seaborn
-altair
-shap
 scikit-learn
 lightgbm
 xgboost
-streamlit==1.7.0
+shap
+altair
+streamlit
 streamlit-autorefresh
