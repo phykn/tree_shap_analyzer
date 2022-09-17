@@ -35,7 +35,7 @@ if "model" not in st.session_state:
     st.session_state["model"] = None
 
 # title
-st.markdown("# Tree shap analyzer")
+st.markdown("# Tree SHAP analyzer")
 st.markdown("### 1. Data preparation")
 
 state = {}
