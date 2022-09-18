@@ -18,7 +18,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 ## 1. Data preparation
 - **Train data file**: Select the data file to use for the analysis.
   <details>
-    <summary>Show example</summary>
+    <summary>example</summary>
     <figure>
         <img src="image/train_data.png">  
     </figure>  
@@ -27,7 +27,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 - **Data preprocessing**: This app provides some simple data preprocessing.  
     - **Missing Value**: Select treatment method for missing values in the train data.
       <details>
-        <summary>Show example</summary> 
+        <summary>example</summary> 
         <figure>
             <img src="image/missing_value.png">
         </figure>
@@ -35,46 +35,64 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
       - **Delete**: Delete the row containing the missing values.
       - **Replace**: Replace with any value in the same column.  
-      
+
     - **Filter**: Filter is the process of choosing a specific subset of the train data.
       - **Filter Number**: Select number of columns to apply filter.
         <details>
-          <summary>Show example</summary> 
+          <summary>example</summary> 
           <figure>
               <img src="image/filter_num.png">
           </figure>  
 
       - **Select values**: Select values for the filtered column.
         - **Numeric data**: You can select data range with the slider.
-          <figure>
-              <img src="image/filter_range.png" width="70%">  
-          </figure> 
+          <details>
+            <summary>example</summary> 
+            <figure>
+                <img src="image/filter_range.png">  
+            </figure> 
+          </details>
 
         - **Categorical data**: You can select specific data with the multiselect.
-          <figure>
-              <img src="image/filter_categorical.png" width="70%">  
-          </figure>  
+          <details>
+            <summary>example</summary> 
+            <figure>
+                <img src="image/filter_categorical.png">  
+            </figure> 
+          </details>  
 
     - **Feature selection**: Select features using the check boxes to apply to the analysis. Data quality shows usable data ratio (except NaN data). `1.0` means all data is avaliable. Please check about `random_noise` in the `Auto Feature Selection` section.
-      <figure>
-          <img src="image/feature.png" width="30%">  
-      </figure>  
+      <details>
+        <summary>example</summary> 
+        <figure>
+            <img src="image/feature.png">  
+        </figure>
+      </details>  
 
     - **Target / Solver**: Select a target column and a solver.
       - **Regression**: `Regression` solver solves regression problems. It uses models as `LGBMRegressor`, `XGBRegressor`, `RandomForestRegressor` and `ExtraTreesRegressor`.
-        <figure>
-            <img src="image/solver_regression.png" width="60%">  
-        </figure>  
+        <details>
+          <summary>example</summary>
+          <figure>
+              <img src="image/solver_regression.png">  
+          </figure>  
+        </details>
 
       - **Binary Classification**: `Binary Classification` solver solves classification problems. It uses models as `LGBMClassifier`, `XGBClassifier`, `RandomForestClassifier` and `ExtraTreesClassifier`.  Here, the target needs to be encoded. Set a percentage to separate the target by 0 and 1.
-        <figure>
-            <img src="image/solver_classification.png" width="60%">  
-        </figure>  
+        <details>
+          <summary>example</summary>
+          <figure>
+              <img src="image/solver_classification.png">  
+          </figure>  
+        </details>  
 
     - **Check dataset**: You can check the prepared data set in real time.
-      <figure>
-          <img src="image/check_dataset.png" width="60%">
-      </figure>  
+      <details>
+        <summary>example</summary>
+        <figure>
+            <img src="image/check_dataset.png">
+        </figure>  
+      </details>
 
 ## 2. Evaluation
 When you click `Start` button, the app train four models and select the best automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
