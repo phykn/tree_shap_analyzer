@@ -142,7 +142,7 @@ You can make predictions about the test data. The test data should include featu
   </figure> 
 </details>  
 
-- **`Make result file`**: Perform the prediction and make a result file.
+- **`Make result file`**: Perform the prediction and make a result file. Generate a download button after the prediction is performed.
 - **`Download`**: Download the result `csv` file.
   
 ## 6. Optional
