@@ -26,13 +26,13 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
       - **Delete**: Delete the row containing the missing values.
       - **Replace**: Replace with any value in the same column.
       <figure>
-          <img src="image/missing_value.png" width="50%">  
+          <img src="image/missing_value.png" width="40%">  
       </figure>  
 
     - **Filter**: Filter is the process of choosing a specific subset of the train data.
       - **Filter Number**: Select number of columns to apply filter.
       <figure>
-          <img src="image/filter_num.png" width="50%">  
+          <img src="image/filter_num.png" width="40%">  
       </figure>  
 
       - **Select values**: Select values for the filtered column.
@@ -48,7 +48,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
     - **Feature selection**: Select features using the check boxes to apply to the analysis. Data quality shows usable data ratio (except NaN data). `1.0` means all data is avaliable. Please check about `random_noise` in the `Auto Feature Selection` section.
       <figure>
-          <img src="image/feature.png" width="40%">  
+          <img src="image/feature.png" width="30%">  
       </figure>  
 
     - **Target / Solver**: Select a target column and a solver.
