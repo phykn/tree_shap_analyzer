@@ -35,7 +35,7 @@ if "model" not in st.session_state:
     st.session_state["model"] = None
 
 # title
-st.markdown("# Tree SHAP analyzer")
+st.markdown("# Tree shap analyzer")
 st.markdown("### 1. Data preparation")
 
 state = {}
@@ -534,7 +534,7 @@ else:
         )
 
 
-    # STEP 3. Feature Importance
+    # STEP 3. Feature importance
     features = st.session_state["shap"]["features"]
     importance = st.session_state["shap"]["importance"]
 
@@ -572,14 +572,14 @@ else:
     )
 
 
-    # STEP 4. Local Explanation
+    # STEP 4. Feature dependence
     df = st.session_state["data"]["final"]
     source = st.session_state["shap"]["source"]
     shap_value = st.session_state["shap"]["shap_value"]
 
     col_1, col_2 = st.columns([3, 1])
     with col_1:
-        st.markdown('### 4. Feature impact')
+        st.markdown('### 4. Feature dependence')
     with col_2:
         type_name = st.selectbox("Type", ["SHAP", "1D Simulation", "2D Simulation"])
 
