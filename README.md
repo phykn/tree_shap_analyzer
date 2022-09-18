@@ -131,10 +131,27 @@ In this section, you can see feature imporance of the best model. You can choose
 </details>
 
 ## 5. Prediction
-You can make predictions about the test data. The test data should include features used for model training.
+You can make predictions about the test data. The test data should include features used for model training.  
+
+<details>  
+  <summary>example</summary>  
+  <figure>
+      <img src="image/prediction.png">  
+  </figure> 
+</details>  
+
+- **`Make result file`**: Perform the prediction and make a result file.
+- **`Download`**: Download the result `csv` file.
   
 ## 6. Optional
-- **Auto feature selection**: `Auto feature selection` is an option to remove unimportant features automatically. Technically, it removes features whose importance lower than `random_noise`. `random_noise` is a feature that has random uniform distribution. Features with smaller `random_noise` importance can be considered insignificant.
+- **Auto feature selection**: `Auto feature selection` is an option to remove unimportant features automatically. Technically, it removes features whose importance lower than `random_noise`. `random_noise` is a feature that has random uniform distribution. Features with smaller `random_noise` importance can be considered insignificant.  
+
+  <details>  
+    <summary>example</summary>  
+    <figure>
+        <img src="image/auto_feature_selection.png">  
+    </figure> 
+  </details>
 
 # Reference
 1. SHAP: https://github.com/slundberg/shap
