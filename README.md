@@ -96,7 +96,6 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
 ## 2. Evaluation
 When you click `Start` button, the app train four models and select the best automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
-
 |Regression|Binary Calssification|
 |:---:|:---:|
 |<img src="image/result_regression.png">|<img src="image/result_classification.png">|
