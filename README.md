@@ -36,7 +36,7 @@ streamlit run main.py
 # How to use
 This app has five sections which are `Data preparation`, `Evaluation`, `Feature importance`, `Feature dependence` and `Prediction`.  
 
-### 1. Data preparation
+## 1. Data preparation
 - **Train data file**: Select the data file to use for the analysis.
   <details>
     <summary>example</summary>
