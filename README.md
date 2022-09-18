@@ -107,13 +107,13 @@ This app has five sections which are `Data preparation`, `Evaluation`, `Feature 
           </figure>  
         </details>  
 
-    - **Check dataset**: You can check the prepared data set in real time.
-      <details>
-        <summary>example</summary>
-        <figure>
-            <img src="image/check_dataset.png">
-        </figure>  
-      </details>
+  - **Check dataset**: You can check the prepared data set in real time.
+    <details>
+      <summary>example</summary>
+      <figure>
+          <img src="image/check_dataset.png">
+      </figure>  
+    </details>
 
 ### 2. Evaluation
 When you click `Start` button, the app trains four models and select the best one automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
