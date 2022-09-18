@@ -17,9 +17,9 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
 ## Data preparation
 - **Train data file**: Select the data file to use for the analysis.
-<figure>
-    <img src="image/train_data.png" width="70%">  
-</figure>  
+  <figure>
+      <img src="image/train_data.png" width="60%">  
+  </figure>  
 
 - **Data preprocessing**: This app provides some simple data preprocessing.  
     - **Missing Value**: Select treatment method for missing values in the train data.
@@ -55,12 +55,12 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
     - **Target / Solver**: Select a target column and a solver.
       - **Regression**: `Regression` solver solves regression problems. It uses models as `LGBMRegressor`, `XGBRegressor`, `RandomForestRegressor` and `ExtraTreesRegressor`.
         <figure>
-            <img src="image/solver_regression.png" width="70%">  
+            <img src="image/solver_regression.png" width="60%">  
         </figure>  
 
       - **Binary Classification**: `Binary Classification` solver solves classification problems. It uses models as `LGBMClassifier`, `XGBClassifier`, `RandomForestClassifier` and `ExtraTreesClassifier`.  Here, the target needs to be encoded. Set a percentage to separate the target by 0 and 1.
         <figure>
-            <img src="image/solver_classification.png" width="70%">  
+            <img src="image/solver_classification.png" width="60%">  
         </figure>  
 
     - **Check dataset**: You can check the prepared data set in real time.
