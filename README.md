@@ -65,7 +65,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
     - **Check dataset**: You can check the prepared data set in real time.
       <figure>
-          <img src="image/check_dataset.png" width="70%">
+          <img src="image/check_dataset.png" width="60%">
       </figure>  
 
 ## Evaluation
