@@ -162,7 +162,7 @@ You can make predictions about the test data. The test data should include featu
 - **`Make result file`**: Perform the prediction and make a result file. Generate a download button after the prediction is performed.
 - **`Download`**: Download the result `csv` file.
   
-## Optional
+## Option
 - **Auto feature selection**: `Auto feature selection` is an option to remove unimportant features automatically. Technically, it removes features whose importance lower than `random_noise`. `random_noise` is a feature that has random uniform distribution. Features with smaller `random_noise` importance can be considered insignificant.  
 
   <details>  
