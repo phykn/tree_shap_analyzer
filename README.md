@@ -17,29 +17,30 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
 ## 1. Data preparation
 - **Train data file**: Select the data file to use for the analysis.
-    <details>
-      <summary>Show example</summary>
-      <figure>
-          <img src="image/train_data.png" width="60%">  
-      </figure>  
-    </details>
+  <details>
+    <summary>Show example</summary>
+    <figure>
+        <img src="image/train_data.png">  
+    </figure>  
+  </details>  
 
 - **Data preprocessing**: This app provides some simple data preprocessing.  
     - **Missing Value**: Select treatment method for missing values in the train data.
       - **Delete**: Delete the row containing the missing values.
-      - **Replace**: Replace with any value in the same column. 
+      - **Replace**: Replace with any value in the same column.
         <details>
           <summary>Show example</summary> 
           <figure>
-              <img src="image/missing_value.png" width="30%">
+              <img src="image/missing_value.png">
           </figure> 
         </details>  
 
-
     - **Filter**: Filter is the process of choosing a specific subset of the train data.
       - **Filter Number**: Select number of columns to apply filter.
+        <details>
+          <summary>Show example</summary> 
           <figure>
-              <img src="image/filter_num.png" width="30%">  
+              <img src="image/filter_num.png">
           </figure>  
 
       - **Select values**: Select values for the filtered column.
