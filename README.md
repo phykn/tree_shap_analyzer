@@ -1,5 +1,5 @@
 # Tree SHAP analyzer
-Tree SHAP analyzer is web app data analyzer. Our goal is to democratize data analysis for those who are not familiar with writing code. It includes data preprocessing, model selection, model optimization, and prediction. Please check the details for the SHAP (https://github.com/slundberg/shap).  
+Tree SHAP analyzer is web based data analyzer. Our goal is to democratize data analysis for those who are not familiar with writing code. It includes data preprocessing, model selection, model optimization, and prediction. This allows you to see which features are important and how they affect the target.
 
 <details>
   <summary>example</summary>
@@ -7,6 +7,20 @@ Tree SHAP analyzer is web app data analyzer. Our goal is to democratize data ana
       <img src="image/front.png">  
   </figure>
 </details>  
+
+# Requirements
+- numpy
+- pandas
+- omegaconf
+- matplotlib
+- seaborn
+- scikit-learn
+- lightgbm
+- xgboost
+- shap
+- altair
+- streamlit
+- streamlit-autorefresh
 
 # How to run
 To start this app, run the `main.py` according to the script below.  
