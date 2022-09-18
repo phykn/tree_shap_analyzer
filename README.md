@@ -8,7 +8,7 @@ Tree SHAP analyzer is web based data analyzer. Our goal is to democratize data a
   </figure>
 </details>  
 
-# Requirements
+## Requirements
 <details>
   <summary>show list</summary>  
   
@@ -26,17 +26,17 @@ Tree SHAP analyzer is web based data analyzer. Our goal is to democratize data a
   - streamlit-autorefresh
 </details>  
 
-# How to run
+## How to run
 To start this app, run the `main.py` according to the script below.  
 
 ```python
 streamlit run main.py
 ```
 
-# How to use
+## How to use
 This app has five sections which are `Data preparation`, `Evaluation`, `Feature importance`, `Feature dependence` and `Prediction`.  
 
-## 1. Data preparation
+### 1. Data preparation
 - **Train data file**: Select the data file to use for the analysis.
   <details>
     <summary>example</summary>
@@ -115,7 +115,7 @@ This app has five sections which are `Data preparation`, `Evaluation`, `Feature 
         </figure>  
       </details>
 
-## 2. Evaluation
+### 2. Evaluation
 When you click `Start` button, the app trains four models and select the best one automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
 
 <details>  
@@ -126,7 +126,7 @@ When you click `Start` button, the app trains four models and select the best on
   |<img src="image/result_regression.png">|<img src="image/result_classification.png">|
 </details>
 
-## 3. Feature importance
+### 3. Feature importance
 In this section, you can see feature imporance for the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.  
 
 <details>  
@@ -136,7 +136,7 @@ In this section, you can see feature imporance for the best model. You can choos
   </figure> 
 </details>
 
-## 4. Feature dependence
+### 4. Feature dependence
 |SHAP|1D simulation|2D simulation|
 |:---:|:---:|:---:|
 |<img src="image/feature_dependence_shap.png" width="100%">|<img src="image/feature_dependence_1d.png" width="90%">|<img src="image/feature_dependence_2d.png" width="97%">|
@@ -149,7 +149,7 @@ In this section, you can see feature imporance for the best model. You can choos
 - **Optional, `Download`**: Download the shap/simulation data file.
 - **Optional, `Extract all figures`**: Compresses the results for all features into a zip file. You can download the zip file with the download button that appears later.  
 
-## 5. Prediction
+### 5. Prediction
 You can make predictions about the test data. The test data should include features used for model training.  
 
 <details>  
@@ -162,7 +162,7 @@ You can make predictions about the test data. The test data should include featu
 - **`Make result file`**: Perform the prediction and make a result file. Generate a download button after the prediction is performed.
 - **`Download`**: Download the result `csv` file.
   
-## 6. Optional
+## Optional
 - **Auto feature selection**: `Auto feature selection` is an option to remove unimportant features automatically. Technically, it removes features whose importance lower than `random_noise`. `random_noise` is a feature that has random uniform distribution. Features with smaller `random_noise` importance can be considered insignificant.  
 
   <details>  
@@ -172,7 +172,7 @@ You can make predictions about the test data. The test data should include featu
     </figure> 
   </details>
 
-# Reference
+## Reference
 1. SHAP: https://github.com/slundberg/shap
 2. Titanic dataset: https://www.kaggle.com/c/titanic
 3. Boston house dataset: https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
