@@ -47,10 +47,9 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
         </figure>  
 
     - **Feature selection**: Select features using the check boxes to apply to the analysis. Data quality shows usable data ratio (except NaN data). `1.0` means all data is avaliable. Please check about `random_noise` in the `Auto Feature Selection` section.
-
-    <figure>
-        <img src="image/feature.png" width="40%">  
-    </figure>  
+      <figure>
+          <img src="image/feature.png" width="40%">  
+      </figure>  
 
     - **Target / Solver**: Select a target column and a solver.
       - **Regression**: `Regression` solver solves regression problems. It uses models as `LGBMRegressor`, `XGBRegressor`, `RandomForestRegressor` and `ExtraTreesRegressor`.
