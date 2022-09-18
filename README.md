@@ -24,7 +24,7 @@ Tree SHAP analyzer is web based data analyzer. Our goal is to democratize data a
   - altair
   - streamlit
   - streamlit-autorefresh
-</details>
+</details>  
 
 # How to run
 To start this app, run the `main.py` according to the script below.  
@@ -34,7 +34,7 @@ streamlit run main.py
 ```
 
 # How to use
-This app has five sections which are `data preparation`, `evaluation`, `feature importance`, `feature dependence` and `prediction`.  
+This app has five sections which are `Data preparation`, `Evaluation`, `Feature importance`, `Feature dependence` and `Prediction`.  
 
 ## 1. Data preparation
 - **Train data file**: Select the data file to use for the analysis.
@@ -45,7 +45,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
     </figure>  
   </details>  
 
-- **Data preprocessing**: This app provides some simple data preprocessing.  
+- **Data preprocessing**: It provides several simple data preprocessing.  
     - **Missing Value**: Select treatment method for missing values in the train data.
       <details>
         <summary>example</summary> 
@@ -54,8 +54,8 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
         </figure>
       </details>  
 
-      - **Delete**: Delete the row containing the missing values.
-      - **Replace**: Replace with any value in the same column.  
+      - **Delete**: It deletes the row containing the missing values.
+      - **Replace**: It replaces with any value in the same column.  
 
     - **Filter**: Filter is the process of choosing a specific subset of the train data.
       - **Filter Number**: Select number of columns to apply filter.
@@ -82,7 +82,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
             </figure> 
           </details>  
 
-    - **Feature selection**: Select features using the check boxes to apply to the analysis. Data quality shows usable data ratio (except NaN data). `1.0` means all data is avaliable. Please check about `random_noise` in the `Auto Feature Selection` section.
+    - **Feature selection**: Select features using the check boxes to apply to the analysis. Data quality shows usable data ratio (except NaN data). `1.0` means all data is avaliable. Please check about `random_noise` in the `Auto Feature Selection` in the `Option` section.
       <details>
         <summary>example</summary> 
         <figure>
@@ -91,7 +91,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
       </details>  
 
     - **Target / Solver**: Select a target column and a solver.
-      - **Regression**: `Regression` solver solves regression problems. It uses models as `LGBMRegressor`, `XGBRegressor`, `RandomForestRegressor` and `ExtraTreesRegressor`.
+      - **Regression**: `Regression` solves regression problems. It uses models as `LGBMRegressor`, `XGBRegressor`, `RandomForestRegressor` and `ExtraTreesRegressor`.
         <details>
           <summary>example</summary>
           <figure>
@@ -99,7 +99,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
           </figure>  
         </details>
 
-      - **Binary Classification**: `Binary Classification` solver solves classification problems. It uses models as `LGBMClassifier`, `XGBClassifier`, `RandomForestClassifier` and `ExtraTreesClassifier`.  Here, the target needs to be encoded. Set a percentage to separate the target by 0 and 1.
+      - **Binary Classification**: `Binary Classification` solves classification problems. It uses models as `LGBMClassifier`, `XGBClassifier`, `RandomForestClassifier` and `ExtraTreesClassifier`.  Here, the target needs to be encoded. Set a percentage to separate the target by 0 and 1.
         <details>
           <summary>example</summary>
           <figure>
@@ -116,7 +116,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
       </details>
 
 ## 2. Evaluation
-When you click `Start` button, the app train four models and select the best automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
+When you click `Start` button, the app trains four models and select the best one automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
 
 <details>  
   <summary>example</summary>  
@@ -127,7 +127,7 @@ When you click `Start` button, the app train four models and select the best aut
 </details>
 
 ## 3. Feature importance
-In this section, you can see feature imporance of the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.  
+In this section, you can see feature imporance for the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.  
 
 <details>  
   <summary>example</summary>  
@@ -144,7 +144,7 @@ In this section, you can see feature imporance of the best model. You can choose
 - **SHAP**: SHAP dependence plot. SHAP means the contribution of features to predict the target. Please refer to the link below for more information on SHAP.
   - https://github.com/slundberg/shap
   - https://christophm.github.io/interpretable-ml-book/shap.html  
-- **1D Simulation**: 1D simulation dependence plot. This shows the change in the target value for the selected feature. Other features are setted as mean value.
+- **1D Simulation**: 1D simulation dependence plot. This shows the change in the target value for one selected feature. Other features are setted as mean value.
 - **2D Simulation**: 2D simulation dependence plot. This shows the change in the target value for two selected features. Other features are setted as mean value.  
 - **Optional, `Download`**: Download the shap/simulation data file.
 - **Optional, `Extract all figures`**: Compresses the results for all features into a zip file. You can download the zip file with the download button that appears later.  
