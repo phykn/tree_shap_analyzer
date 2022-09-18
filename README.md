@@ -18,7 +18,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 ## Data preparation
 - **Train data file**: Select the data file to use for the analysis.
 <figure>
-    <img src="image/train_dat.png" width="100%">  
+    <img src="image/train_data.png" width="70%">  
 </figure>  
 
 - **Data preprocessing**: This app provides some simple data preprocessing.  
@@ -26,24 +26,24 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
       - **Delete**: Delete the row containing the missing values.
       - **Replace**: Replace with any value in the same column.
       <figure>
-          <img src="image/missing_value.png">  
+          <img src="image/missing_value.png" width="50%">  
       </figure>  
 
     - **Filter**: Filter is the process of choosing a specific subset of the train data.
       - **Filter Number**: Select number of columns to apply filter.
       <figure>
-          <img src="image/filter_num.png">  
+          <img src="image/filter_num.png" width="50%">  
       </figure>  
 
       - **Select values**: Select values for the filtered column.
         - **Numeric data**: You can select data range with the slider.
         <figure>
-            <img src="image/filter_range.png" width="80%">  
+            <img src="image/filter_range.png" width="70%">  
         </figure> 
 
         - **Categorical data**: You can select specific data with the multiselect.
         <figure>
-            <img src="image/filter_categorical.png" width="80%">  
+            <img src="image/filter_categorical.png" width="70%">  
         </figure>  
 
     - **Feature selection**: Select features using the check boxes to apply to the analysis. Data quality shows usable data ratio (except NaN data). `1.0` means all data is avaliable. Please check about `random_noise` in the `Auto Feature Selection` section.
@@ -54,17 +54,17 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
     - **Target / Solver**: Select a target column and a solver.
       - **Regression**: `Regression` solver solves regression problems. It uses models as `LGBMRegressor`, `XGBRegressor`, `RandomForestRegressor` and `ExtraTreesRegressor`.
       <figure>
-          <img src="image/solver_regression.png" width="80%">  
+          <img src="image/solver_regression.png" width="70%">  
       </figure>  
 
       - **Binary Classification**: `Binary Classification` solver solves classification problems. It uses models as `LGBMClassifier`, `XGBClassifier`, `RandomForestClassifier` and `ExtraTreesClassifier`.  Here, the target needs to be encoded. Set a percentage to separate the target by 0 and 1.
       <figure>
-          <img src="image/solver_classification.png" width="80%">  
+          <img src="image/solver_classification.png" width="70%">  
       </figure>  
 
     - **Check dataset**: You can check the prepared data set in real time.
     <figure>
-        <img src="image/check_dataset.png" width="90%">
+        <img src="image/check_dataset.png" width="70%">
     </figure>  
 
 ## Evaluation
@@ -77,7 +77,7 @@ When you click `Start` button, the app train four models and select the best aut
 ## Feature importance
 In this section, you can see feature imporance of the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.
 <figure>
-    <img src="image/feature_importance.png" width="60%">  
+    <img src="image/feature_importance.png" width="50%">  
 </figure> 
 
 ## Feature dependence
