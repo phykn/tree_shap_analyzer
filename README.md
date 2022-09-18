@@ -85,8 +85,8 @@ In this section, you can see feature imporance of the best model. You can choose
 - **SHAP**: SHAP dependence plot. SHAP means the contribution of features to predict the target. Please refer to the link below for more information on SHAP.
   - https://github.com/slundberg/shap
   - https://christophm.github.io/interpretable-ml-book/shap.html  
-- **1D Simulation**
-- **2D Simulation**  
+- **1D Simulation**: 1D simulation dependence plot. This shows the change in the target value for the selected feature. Other features are setted as mean value.
+- **2D Simulation**: 2D simulation dependence plot. This shows the change in the target value for two selected features. Other features are setted as mean value.
 
 |SHAP|1D simulation|2D simulation|
 |:---:|:---:|:---:|
