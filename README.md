@@ -15,7 +15,7 @@ streamlit run main.py
 # How to analyze
 This app has five sections which are `data preparation`, `evaluation`, `feature importance`, `feature dependence` and `prediction`.  
 
-## Data preparation
+## 1. Data preparation
 - **Train data file**: Select the data file to use for the analysis.
   <figure>
       <img src="image/train_data.png" width="60%">  
@@ -68,27 +68,27 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
           <img src="image/check_dataset.png" width="60%">
       </figure>  
 
-## Evaluation
+## 2. Evaluation
 When you click `Start` button, the app train four models and select the best automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
 
 |Regression|Binary Calssification|
 |:---:|:---:|
 |<img src="image/result_regression.png">|<img src="image/result_classification.png">|
 
-## Feature importance
+## 3. Feature importance
 In this section, you can see feature imporance of the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.
 <figure>
     <img src="image/feature_importance.png" width="50%">  
 </figure> 
 
-## Feature dependence
+## 4. Feature dependence
 |SHAP|1D simulation|2D simulation|
 |:---:|:---:|:---:|
 |<img src="image/feature_dependence_shap.png" width="100%">|<img src="image/feature_dependence_1d.png" width="90%">|<img src="image/feature_dependence_2d.png" width="97%">|
 
 
-## Prediction
-## Option
+## 5. Prediction
+## 6. Optional
 
 # Reference
 1. SHAP: https://github.com/slundberg/shap
