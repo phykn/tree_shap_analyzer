@@ -96,26 +96,39 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 
 ## 2. Evaluation
 When you click `Start` button, the app train four models and select the best automatically. For the regression models, the minimum `mae` (mean average error) model is selected. For the classification models, the maximum `auc` (area under the curve) model is selected. It provides visualization of prediction results and answers.  
-|Regression|Binary Calssification|
-|:---:|:---:|
-|<img src="image/result_regression.png">|<img src="image/result_classification.png">|
+
+<details>  
+  <summary>example</summary>  
+
+  |Regression|Binary Calssification|
+  |:---:|:---:|
+  |<img src="image/result_regression.png">|<img src="image/result_classification.png">|
+</details>
 
 ## 3. Feature importance
-In this section, you can see feature imporance of the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.
-<figure>
-    <img src="image/feature_importance.png" width="50%">  
-</figure> 
+In this section, you can see feature imporance of the best model. You can choose the number of features in the graph with the number input. When you click the `Download` button, you can download the feature importance data as a `csv` file.  
+
+<details>  
+  <summary>example</summary>  
+  <figure>
+      <img src="image/feature_importance.png">  
+  </figure> 
+</details>
 
 ## 4. Feature dependence
 - **SHAP**: SHAP dependence plot. SHAP means the contribution of features to predict the target. Please refer to the link below for more information on SHAP.
   - https://github.com/slundberg/shap
   - https://christophm.github.io/interpretable-ml-book/shap.html  
 - **1D Simulation**: 1D simulation dependence plot. This shows the change in the target value for the selected feature. Other features are setted as mean value.
-- **2D Simulation**: 2D simulation dependence plot. This shows the change in the target value for two selected features. Other features are setted as mean value.
+- **2D Simulation**: 2D simulation dependence plot. This shows the change in the target value for two selected features. Other features are setted as mean value.  
 
-|SHAP|1D simulation|2D simulation|
-|:---:|:---:|:---:|
-|<img src="image/feature_dependence_shap.png" width="100%">|<img src="image/feature_dependence_1d.png" width="90%">|<img src="image/feature_dependence_2d.png" width="97%">|
+<details>  
+  <summary>example</summary>  
+
+  |SHAP|1D simulation|2D simulation|
+  |:---:|:---:|:---:|
+  |<img src="image/feature_dependence_shap.png" width="100%">|<img src="image/feature_dependence_1d.png" width="90%">|<img src="image/feature_dependence_2d.png" width="97%">|
+</details>
 
 ## 5. Prediction
 You can make predictions about the test data. The test data should include features used for model training.
