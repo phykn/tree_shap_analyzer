@@ -1,7 +1,8 @@
 # Tree SHAP analyzer
 <figure>
-    <img src="image/front.png" with="70%">  
+    <img src="image/front.png" width="80%">  
 </figure>  
+
 Tree SHAP analyzer is web app data analyzer. Our goal is to democratize data analysis for those who are not familiar with writing code. It includes data preprocessing, model selection, model optimization, and prediction. Please check the details for the SHAP (https://github.com/slundberg/shap).
 
 # How to start
@@ -17,7 +18,7 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
 ## Data preparation
 - **Train data file**: Select the data file to use for the analysis.
 <figure>
-    <img src="image/train_data.png">  
+    <img src="image/train_dat.png" width="100%">  
 </figure>  
 
 - **Data preprocessing**: This app provides some simple data preprocessing.  
