@@ -26,13 +26,13 @@ This app has five sections which are `data preparation`, `evaluation`, `feature 
       - **Delete**: Delete the row containing the missing values.
       - **Replace**: Replace with any value in the same column.
       <figure>
-          <img src="image/missing_value.png" width="40%">  
+          <img src="image/missing_value.png" width="30%">  
       </figure>  
 
     - **Filter**: Filter is the process of choosing a specific subset of the train data.
       - **Filter Number**: Select number of columns to apply filter.
       <figure>
-          <img src="image/filter_num.png" width="40%">  
+          <img src="image/filter_num.png" width="30%">  
       </figure>  
 
       - **Select values**: Select values for the filtered column.
