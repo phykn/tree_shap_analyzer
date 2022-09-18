@@ -82,13 +82,19 @@ In this section, you can see feature imporance of the best model. You can choose
 </figure> 
 
 ## 4. Feature dependence
+- **SHAP**
+- **1D Simulation**
+- **2D Simulation**  
+
 |SHAP|1D simulation|2D simulation|
 |:---:|:---:|:---:|
 |<img src="image/feature_dependence_shap.png" width="100%">|<img src="image/feature_dependence_1d.png" width="90%">|<img src="image/feature_dependence_2d.png" width="97%">|
 
-
 ## 5. Prediction
+You can make predictions about the test data. The test data should include features used for model training.
+  
 ## 6. Optional
+- **Auto feature selection**: `Auto feature selection` is an option to remove unimportant features automatically. Technically, it removes features whose importance lower than `random_noise`. `random_noise` is a feature that has random uniform distribution. Features with smaller `random_noise` importance can be considered insignificant.
 
 # Reference
 1. SHAP: https://github.com/slundberg/shap
