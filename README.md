@@ -5,8 +5,8 @@
 
 Tree SHAP analyzer is web app data analyzer. Our goal is to democratize data analysis for those who are not familiar with writing code. It includes data preprocessing, model selection, model optimization, and prediction. Please check the details for the SHAP (https://github.com/slundberg/shap).
 
-# How to run app
-To start is app, run the `main.py` according to the script below.  
+# How to run
+To start this app, run the `main.py` according to the script below.  
 
 ```python
 streamlit run main.py
