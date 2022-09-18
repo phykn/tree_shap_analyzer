@@ -9,18 +9,22 @@ Tree SHAP analyzer is web based data analyzer. Our goal is to democratize data a
 </details>  
 
 # Requirements
-- numpy
-- pandas
-- omegaconf
-- matplotlib
-- seaborn
-- scikit-learn
-- lightgbm
-- xgboost
-- shap
-- altair
-- streamlit
-- streamlit-autorefresh
+<details>
+  <summary>show list</summary>  
+  
+  - numpy
+  - pandas
+  - omegaconf
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - lightgbm
+  - xgboost
+  - shap
+  - altair
+  - streamlit
+  - streamlit-autorefresh
+</details>
 
 # How to run
 To start this app, run the `main.py` according to the script below.  
